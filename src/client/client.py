@@ -17,12 +17,14 @@ def on_disconnect():
 sio.connect('http://localhost:5000')
 
 while 1:
-    selection = input('type selection (1: send message, 2: disconnect): ')
+    selection = input('type selection (1: send message, 2: create game, 3: disconnect): ')
     print(selection)
     if selection == "1":
         msg = input('enter message:')
         sio.emit('message', {'msg': msg})
     elif selection == "2":
+        sio.emit('create_room')
+    elif selection == "3":
         sio.disconnect()
         break
 

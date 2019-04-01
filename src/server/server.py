@@ -4,7 +4,7 @@
 import eventlet
 import socketio
 
-import game
+from game import Game
 
 host = ''
 port = 5000
@@ -29,8 +29,10 @@ def disconnect(sid):
     print('disconnect', sid)
 
 @sio.on('create_room')
-def create_room(sid, data):
-    sio.enter_room(sid, roomNames.length + 1)
+def create_room(sid):
+    roomNames.append(Game())
+    sio.enter_room(sid, len(roomNames) - 1)
+    sio.emit('message', 'Room ' + str(len(roomNames) - 1)+'  created')
 
 @sio.on('join_room')
 def join_room(sid, data):
