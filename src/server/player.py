@@ -4,6 +4,7 @@ class Player:
         self.id = id
         self.cards = None
         self.location = None
+        self.disabled = False
 
 
     def initialize(self, cards, location):

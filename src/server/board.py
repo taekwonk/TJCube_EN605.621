@@ -1,3 +1,6 @@
+from model.tile import Tile
+from model.tile_type import TileType
+
 class Board:
     def __init__(self):
         study = Tile("Study", TileType.ROOM)
@@ -27,7 +30,7 @@ class Board:
         #TODO: add all connections
 
         self.board = [study, hall, lounge, library, billiard, dining, conservatory, ball, kitchen, 
-            h_sh, h_hl, h_sl, h_hb, h_ld, h_lb, h_bd, h_lc, h_bb, h_dk, h_cb, h_bk]
+                        h_sh, h_hl, h_sl, h_hb, h_ld, h_lb, h_bd, h_lc, h_bb, h_dk, h_cb, h_bk]
 
     def get_tile(self, name):
         return next((x for x in self.board if x.name == name), None)

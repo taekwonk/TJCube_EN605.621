@@ -8,5 +8,5 @@ class Tile:
     def set_connected(self, arr):
         self.connected = arr
 
-    def get_connected(self)
+    def get_connected(self):
         return self.connected

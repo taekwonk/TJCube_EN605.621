@@ -14,13 +14,22 @@ port = 5000
 sio = socketio.Server(logger=True)
 app = socketio.WSGIApp(sio)
 
-rooms = {}
-player_list = {}
+rooms = {} #key= guid, value= game
+player_list = {} #key=sid, value=room_id
+
+@sio.on('debug')
+def debug(sid):
+    print('rooms', rooms)
+    print('players', player_list)
+    sio.emit('debug', {'sid': sid, 'test': 'test'})
+#    sio.emit('message', rooms)
+ #   sio.emit('message', player_list)
 
 @sio.on('connect')
 def connect(sid, environ):
     sio.save_session(sid, {"test" : "test string"})
     print('connect', sid)
+    sio.emit('message', sid)
 
 @sio.on('message')
 def message(sid, data):
@@ -39,38 +48,41 @@ def create_room(sid):
     id = uuid.uuid4()
     rooms[id] = Game()
 
-    session = sio.session as session
+    session = sio.get_session(sid)
     session['room'] = id
     sio.save_session(sid, session)
 
     sio.enter_room(sid, id)
-    sio.emit('message', 'Room ' + id +'  created')
+    name = rooms[id].add_player(sid)   
+    player_list[sid] = id 
+    sio.emit('message', 'Room {} created. Joining game as {}'.format(id, name), room=id)
 
 @sio.on('join_room')
 def join_room(sid, data): #data = room_id
 
-    session = sio.session as session
-    if(session['room'] is None):    
+    session = sio.get_session(sid)
+    if(session['room'] is None):
         if(data is None):  #join first joinable room
             for key, value in rooms.items():
                 if(value.joinable()):
                     name = value.add_player(sid)
                     if(name):
                         sio.enter_room(sid, key)
-                        session = sio.session as session
+                        session = sio.get_session(sid)
                         session['room'] = key
                         session['name'] = name
                         sio.save_session(sid, session)
                                 
                         player_list[sid] = key
 
-                        sio.emit({key, name})
+                        sio.emit('joined_game', {key, name}, room=key)
                     else:
-                        sio.emit(None)
+                        sio.emit('message', None, room=key)
     
     else : #rejoining from connection drop, for example. Maybe don't need this?
+        #TODO: finish this
         sio.enter_room(sid, key) 
-        sio.emit(session['room'])
+        sio.emit('message', 'Rejoined room', room=session['room'])
                 
     # else:
     #     sio.enter_room(sid, data)
@@ -80,15 +92,76 @@ def join_room(sid, data): #data = room_id
 
     #     sio.emit(data)
     
-    return sio.emit(None)
 
 @sio.on('start_game')
-def start_game(sid, room_id):
+def start_game(sid):
+    #TODO: add precondition
+
+    room_id = player_list[sid]
     room = rooms[room_id]
     if(room is not None):
-        room.start_game()
+        start_player_info = room.start_game()
+        sio.emit('game_started', start_player_info, room_id)
+
+@sio.on('move')
+def move(sid, tileName): #tileName: ex. Library, h_sh, etc.        
+    room_id = player_list[sid]
+    game = rooms[room_id]
+    #TODO: check if it's player's turn
+    if(game is not None):
+        valid = game.player_moved(sid, tileName)
+        if(valid):
+            sio.emit('message', 'player moved', room_id)
+        
+
+@sio.on('suggest')
+def suggest(sid, case):
+    #case.suspect - suspect name
+    #case.location - room name
+    #case.weapon - weapon name
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    #TODO: check if it's player's turn
+
+    if(game is not None):
+        sio.emit('message', 'Suggestion is made: Crime was committed in the {} by {} with the {}'.format(case.location, case.suspect, case.weapon), room_id)
+        result = game.suggestion_made(sid, case)
+        if(result is False):
+            pass #invalid
+        if(result.card is None):
+            #no one had matching card
+            sio.emit('message', 'No one had matching card', room_id)
+        else:
+            sio.emit('message', 'Player {} showed 1 card'.format(result.player_name) ,room_id)
+            sio.emit('suggest_result', result.card, sid )
 
 
+
+@sio.on('accuse')
+def accuse(sid, case):
+    #case.suspect - suspect name
+    #case.location - room name
+    #case.weapon - weapon name
+
+    room_id = player_list[sid]
+    game = rooms[room_id]
+    #TODO: check if it's player's turn
+
+    result = game.accusation_made(sid, case)
+
+    sio.emit('message', 'broadcast result?')
+    sio.emit('accuse_result', {is_correct: result})
+    pass
+
+@sio.on('end_turn')
+def end_turn(sid):
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    #TODO: check if it's player's turn
+
+    game.end_turn(sid)
 
 
 
