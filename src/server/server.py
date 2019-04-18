@@ -7,6 +7,7 @@ import uuid
 
 from game import Game
 import player
+from model.tile_type import TileType
 
 host = ''
 port = 5000
@@ -107,11 +108,12 @@ def start_game(sid):
 def move(sid, tileName): #tileName: ex. Library, h_sh, etc.        
     room_id = player_list[sid]
     game = rooms[room_id]
-    #TODO: check if it's player's turn
-    if(game is not None):
-        valid = game.player_moved(sid, tileName)
-        if(valid):
-            sio.emit('message', 'player moved', room_id)
+
+    if(game.is_player_turn(sid)):
+        if(game is not None):
+            valid = game.player_moved(sid, tileName)
+            if(valid):
+                sio.emit('message', 'player moved', room_id)
         
 
 @sio.on('suggest')
@@ -122,19 +124,26 @@ def suggest(sid, case):
     room_id = player_list[sid]
     game = rooms[room_id]
 
-    #TODO: check if it's player's turn
+    if(game.is_player_turn(sid)):
+        if(game is not None):
+            player = game.get_player(sid)
+            if(player.location.name != case['location']):
+                sio.emit('message', 'Player must be in the room that he is suggesting.', room_id)
+                return
+            if(player.location.type == TileType.HALLWAY):
+                sio.emit('message', 'Player must be in a room to suggest.', room_id)
+                return
 
-    if(game is not None):
-        sio.emit('message', 'Suggestion is made: Crime was committed in the {} by {} with the {}'.format(case.location, case.suspect, case.weapon), room_id)
-        result = game.suggestion_made(sid, case)
-        if(result is False):
-            pass #invalid
-        if(result.card is None):
-            #no one had matching card
-            sio.emit('message', 'No one had matching card', room_id)
-        else:
-            sio.emit('message', 'Player {} showed 1 card'.format(result.player_name) ,room_id)
-            sio.emit('suggest_result', result.card, sid )
+            sio.emit('message', 'Suggestion is made: Crime was committed in the {} by {} with the {}'.format(case['location'], case['suspect'], case['weapon']), room_id)
+            result = game.suggestion_made(sid, case)
+            if(result is False):
+                pass #invalid
+            if(result['card'] is None):
+                #no one had matching card
+                sio.emit('message', 'No one had matching card', room_id)
+            else:
+                sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
+                sio.emit('suggest_result', {'name': result['card'].name, 'type': result['card'].type}, sid )
 
 
 
@@ -146,22 +155,27 @@ def accuse(sid, case):
 
     room_id = player_list[sid]
     game = rooms[room_id]
-    #TODO: check if it's player's turn
 
-    result = game.accusation_made(sid, case)
+    if(game.is_player_turn(sid)):
+        result = game.accusation_made(sid, case)
+        player = game.get_player(sid)
+        if(result): #win!
+            sio.emit('message', '{} found the answer, {} wins the game!'.format(player.name, player.name), room_id)
+        else: #
+            sio.emit('message', '{} made a wrong accuation. '.format(player.name), room_id)
 
-    sio.emit('message', 'broadcast result?')
-    sio.emit('accuse_result', {is_correct: result})
-    pass
+        sio.emit('accuse_result', {"is_correct": result})
+        
+        #TODO: end game
+
 
 @sio.on('end_turn')
 def end_turn(sid):
     room_id = player_list[sid]
     game = rooms[room_id]
 
-    #TODO: check if it's player's turn
-
-    game.end_turn(sid)
+    if(game.is_player_turn(sid)):
+        game.end_turn(sid)
 
 
 

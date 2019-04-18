@@ -6,7 +6,7 @@ from model.card_type import CardType
 from board import Board
 from player import Player
 
-from random import shuffle
+from random import shuffle, randrange
 
 class Game:
     def __init__(self):
@@ -35,7 +35,7 @@ class Game:
         weapons.append(Card("Wrench", CardType.WEAPON))
         weapons.append(Card("Candlestick", CardType.WEAPON))
         weapons.append(Card("Revolver", CardType.WEAPON))
-        weapon_answer = weapons.pop(random.randrange(len(weapons)))
+        weapon_answer = weapons.pop(randrange(len(weapons)))
 
         rooms = []
         rooms.append(Card("Study", CardType.ROOM))
@@ -47,7 +47,7 @@ class Game:
         rooms.append(Card("Conservatory", CardType.ROOM))
         rooms.append(Card("Ballroom", CardType.ROOM))
         rooms.append(Card("Kitchen", CardType.ROOM))
-        room_answer = rooms.pop(random.ranrange(len(rooms)))
+        room_answer = rooms.pop(randrange(len(rooms)))
 
         suspects = []
         suspects.append(Card("Miss Scarlet", CardType.CHARACTER))
@@ -56,7 +56,7 @@ class Game:
         suspects.append(Card("Mrs. Peacock", CardType.CHARACTER))
         suspects.append(Card("Mr. Green", CardType.CHARACTER))
         suspects.append(Card("Mrs. White", CardType.CHARACTER))
-        suspect_answer = suspects.pop(random.ranrange(len(suspects)))
+        suspect_answer = suspects.pop(randrange(len(suspects)))
 
         #answer cards
         self.case_file = {'weapon': weapon_answer, 'room': room_answer, 'suspect': suspect_answer}
@@ -68,7 +68,7 @@ class Game:
         #shuffle and deal cards
         shuffle(self.card_list)
         players_count = len(self.players)
-        hands = [self.deck[i::players_count] for i in range(0, players_count)]
+        hands = [self.card_list[i::players_count] for i in range(0, players_count)]
         for i in range(0, len(self.players)):
             self.players[i].cards = hands[i]
 
@@ -80,7 +80,7 @@ class Game:
     
     def add_player(self, sid):
         if(len(self.players) < 6):
-            player = Player(sid, self.suspects[len(self.players)-1])
+            player = Player(sid, self.suspects[len(self.players)])
             self.players.append(player)
             return self.suspects[len(self.players)-1]
 
@@ -94,7 +94,7 @@ class Game:
         self.started = True
         self.initialize_game()
         #TODO: give player turn
-        return {name: self.suspects[0], id: self.players[0].id}
+        return {"name": self.suspects[0], "id": self.players[0].id}
     
     def next_turn(self):
         self.current_player_index += self.current_player_index
@@ -107,6 +107,9 @@ class Game:
     def get_player(self, player_id):
         return next((x for x in self.players if x.id == player_id), None)
 
+    def is_player_turn(self, player_id):
+        return self.players[self.current_player_index].id == player_id
+
     def player_moved(self, player_id, tileName):
         #validate move
         #update player location
@@ -114,7 +117,7 @@ class Game:
         player = self.get_player(player_id)
         current_location = player.location
         valid_tiles = current_location.get_connected()
-        to_tile = next((x for x in valid_tiles if x.name == name), None)
+        to_tile = next((x for x in valid_tiles if x.name == tileName), None)
 
         occupied = next((x for x in self.players if x.location == to_tile and not x.disabled), None)
 
@@ -129,15 +132,19 @@ class Game:
         #TODO: add validation (is player in correct room?, is it player's turn?)
 
         #bring suspect to same room
-        suspect = next((x for x in self.players if x.name == case.suspect), None)
-        suspect.location = player.location
+        suspect = next((x for x in self.players if x.name == case['suspect']), None)
+        if(suspect is not None):
+            suspect.location = player.location
+
+        #TODO: make this better
+        case['location'] = player.location.name
 
         for p in self.players:
-            if(p.name is not player.name):
-                card = next((x for x in p.cards if x.name == case.suspect or x.name == case.weapon or x.name == case.room), None)
-                if(card is not None):
-                    return {card: card, player_name: p.name}
-                return {card: None}
+            #if(p.name is not player.name):
+            card = next((x for x in p.cards if x.name == case['suspect'] or x.name == case['weapon'] or x.name == case['location']), None)
+            if(card is not None):
+                return {"card": card, "player_name": p.name}
+            return {"card": None}
 
     def accusation_made(self, player_id, case):
         player = self.get_player(player_id)
@@ -145,7 +152,7 @@ class Game:
         room = self.case_file.room.name
         suspect = self.case_file.suspect.name
 
-        is_correct = case.suspect == suspect and case.location == room and case.weapon == weapon
+        is_correct = case['suspect'] == suspect and case['location'] == room and case['weapon'] == weapon
         if(is_correct):
             #the player won
             #end game
@@ -153,13 +160,11 @@ class Game:
         else:
             #disable player
             player.disabled = True
+            self.next_turn()
             return False
 
-    def end_game(self):
-        pass
-
     def disable_player(self, player):
-        pass
+        player.disabled = True
 
     def end_turn(self, player_id):
         #increment next player index

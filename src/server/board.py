@@ -27,7 +27,27 @@ class Board:
         h_bk = Tile("h_bk", TileType.HALLWAY)
 
         study.set_connected([h_sh, h_sl, kitchen])
-        #TODO: add all connections
+        hall.set_connected([h_sh, h_hl, h_hb])
+        lounge.set_connected([h_hl, h_ld, conservatory])
+        library.set_connected([h_sl, h_lb, h_lc])
+        billiard.set_connected([h_hb, h_lb, h_bd, h_bb])
+        dining.set_connected([h_ld, h_bd, h_dk])
+        conservatory.set_connected([h_lc, h_cb, lounge])
+        ball.set_connected([h_cb, h_bb, h_bk])
+        kitchen.set_connected([h_bk, h_dk, study])
+
+        h_sh.set_connected([study, hall])
+        h_hl.set_connected([hall, lounge])
+        h_sl.set_connected([study, library])
+        h_hb.set_connected([hall, billiard])
+        h_ld.set_connected([lounge, dining])
+        h_lb.set_connected([library, billiard])
+        h_bd.set_connected([billiard, dining])
+        h_lc.set_connected([library, conservatory])
+        h_bb.set_connected([billiard, ball])
+        h_dk.set_connected([dining, kitchen])
+        h_cb.set_connected([conservatory, ball])
+        h_bk.set_connected([ball, kitchen])
 
         self.board = [study, hall, lounge, library, billiard, dining, conservatory, ball, kitchen, 
                         h_sh, h_hl, h_sl, h_hb, h_ld, h_lb, h_bd, h_lc, h_bb, h_dk, h_cb, h_bk]
