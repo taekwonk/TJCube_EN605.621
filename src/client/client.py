@@ -50,14 +50,14 @@ while 1:
         tile = input('enter destination:')
         sio.emit('move', tile)
     elif selection == "7":
-        suspect = input('enter suspect')
-        location = input('enter location')
-        weapon = input('enter weapon')
+        suspect = input('enter suspect:')
+        location = input('enter location:')
+        weapon = input('enter weapon:')
         sio.emit('suggest', {"suspect":suspect, "location":location, "weapon":weapon})
     elif selection == "8":
-        suspect = input('enter suspect')
-        location = input('enter location')
-        weapon = input('enter weapon')
+        suspect = input('enter suspect:')
+        location = input('enter location:')
+        weapon = input('enter weapon:')
         sio.emit('accuse', {"suspect":suspect, "location":location, "weapon":weapon})
     elif selection == "9":
         sio.emit('end_turn')
