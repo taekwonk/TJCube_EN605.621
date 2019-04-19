@@ -19,11 +19,11 @@ def on_debug(data):
     print(data)
 
 @sio.on('suggest_result')
-def on_suggest_result(data);
+def on_suggest_result(data):
     print(data)
 
 @sio.on('accuse_result')
-def on_accuse_result(data);
+def on_accuse_result(data):
     print(data)
 
 
@@ -31,11 +31,13 @@ def on_accuse_result(data);
 sio.connect('http://localhost:5000')
 
 while 1:
-    selection = input('type selection (1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end): ')
+    selection = input('type selection (0:join, 1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end): ')
     print(selection)
     if selection == "1":
         msg = input('enter message:')
-        sio.emit('message', {'msg': msg})        
+        sio.emit('message', {'msg': msg})    
+    elif selection =="0":
+        sio.emit('join_room')    
     elif selection == "2":
         sio.emit('create_room')
     elif selection == "3":

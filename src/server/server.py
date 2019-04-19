@@ -30,13 +30,18 @@ def debug(sid):
 def connect(sid, environ):
     sio.save_session(sid, {"test" : "test string"})
     print('connect', sid)
-    sio.emit('message', sid)
+    sio.emit('message', 'connected to server', sid)
 
 @sio.on('message')
 def message(sid, data):
     #data.message, data.room_id
     print('message', data)
-    sio.emit('message', data.message, data.room_id)
+
+    room_id = player_list[sid]
+    if(room_id is not None):
+        room = rooms[room_id]
+
+        sio.emit('message', data.message, data.room_id)
 
 @sio.on('disconnect')
 def disconnect(sid):
@@ -51,35 +56,38 @@ def create_room(sid):
 
     session = sio.get_session(sid)
     session['room'] = id
-    sio.save_session(sid, session)
 
     sio.enter_room(sid, id)
     name = rooms[id].add_player(sid)   
+    session['name'] = name
+    sio.save_session(sid, session)
+
     player_list[sid] = id 
     sio.emit('message', 'Room {} created. Joining game as {}'.format(id, name), room=id)
 
 @sio.on('join_room')
-def join_room(sid, data): #data = room_id
+def join_room(sid): #data = room_id
 
     session = sio.get_session(sid)
-    if(session['room'] is None):
-        if(data is None):  #join first joinable room
-            for key, value in rooms.items():
-                if(value.joinable()):
-                    name = value.add_player(sid)
-                    if(name):
-                        sio.enter_room(sid, key)
-                        session = sio.get_session(sid)
-                        session['room'] = key
-                        session['name'] = name
-                        sio.save_session(sid, session)
-                                
-                        player_list[sid] = key
+    if('room' not in session or session['room'] is None):
+#        if(data is None):  #join first joinable room
+        for key, value in rooms.items():
+            if(value.joinable()):
+                name = value.add_player(sid)
+                if(name):
+                    sio.enter_room(sid, key)
+                    session = sio.get_session(sid)
+                    session['room'] = key
+                    session['name'] = name
+                    sio.save_session(sid, session)
+                            
+                    player_list[sid] = key
 
-                        sio.emit('joined_game', {key, name}, room=key)
-                    else:
-                        sio.emit('message', None, room=key)
-    
+                    sio.emit('message', 'Player joined as {}'.format(name), key)
+                    sio.emit('joined_game', {'key':str(key), 'name':name}, sid)
+                else:
+                    sio.emit('message', None, room=key)
+
     else : #rejoining from connection drop, for example. Maybe don't need this?
         #TODO: finish this
         sio.enter_room(sid, key) 
@@ -102,7 +110,12 @@ def start_game(sid):
     room = rooms[room_id]
     if(room is not None):
         start_player_info = room.start_game()
+        sio.emit('message', 'Game started!', room_id)
         sio.emit('game_started', start_player_info, room_id)
+        
+
+
+#TODO: add limit to actions so they can only take 1 of each action each turn (move, suggest, accuse)
 
 @sio.on('move')
 def move(sid, tileName): #tileName: ex. Library, h_sh, etc.        
@@ -113,7 +126,9 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
         if(game is not None):
             valid = game.player_moved(sid, tileName)
             if(valid):
-                sio.emit('message', 'player moved', room_id)
+                player = game.get_player(sid)
+                sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
+                sio.emit('moved')
         
 
 @sio.on('suggest')
@@ -143,7 +158,7 @@ def suggest(sid, case):
                 sio.emit('message', 'No one had matching card', room_id)
             else:
                 sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
-                sio.emit('suggest_result', {'name': result['card'].name, 'type': result['card'].type}, sid )
+                sio.emit('suggest_result', {'name': result['card'].name, 'type': str(result['card'].type)}, sid )
 
 
 
@@ -162,7 +177,10 @@ def accuse(sid, case):
         if(result): #win!
             sio.emit('message', '{} found the answer, {} wins the game!'.format(player.name, player.name), room_id)
         else: #
-            sio.emit('message', '{} made a wrong accuation. '.format(player.name), room_id)
+            sio.emit('message', '{} made a wrong accuation. Player cannot make a move from this point.'.format(player.name), room_id)
+            nextPlayer = game.end_turn(sid)
+            sio.emit('message', 'It is now {}''s turn'.format(nextPlayer), room_id)
+
 
         sio.emit('accuse_result', {"is_correct": result})
         
@@ -175,7 +193,10 @@ def end_turn(sid):
     game = rooms[room_id]
 
     if(game.is_player_turn(sid)):
-        game.end_turn(sid)
+        player = game.get_player(sid)
+        nextPlayer = game.end_turn(sid)
+        sio.emit('message', '{} ended his/her turn'.format(player.name), room_id)
+        sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
 
 
 

@@ -97,7 +97,7 @@ class Game:
         return {"name": self.suspects[0], "id": self.players[0].id}
     
     def next_turn(self):
-        self.current_player_index += self.current_player_index
+        self.current_player_index = self.current_player_index + 1
         if(self.current_player_index >= len(self.players)):
             self.current_player_index = 0
 
@@ -144,13 +144,14 @@ class Game:
             card = next((x for x in p.cards if x.name == case['suspect'] or x.name == case['weapon'] or x.name == case['location']), None)
             if(card is not None):
                 return {"card": card, "player_name": p.name}
-            return {"card": None}
+        
+        return {"card": None}
 
     def accusation_made(self, player_id, case):
         player = self.get_player(player_id)
-        weapon = self.case_file.weapon.name 
-        room = self.case_file.room.name
-        suspect = self.case_file.suspect.name
+        weapon = self.case_file['weapon'].name 
+        room = self.case_file['room'].name
+        suspect = self.case_file['suspect'].name
 
         is_correct = case['suspect'] == suspect and case['location'] == room and case['weapon'] == weapon
         if(is_correct):
@@ -160,7 +161,6 @@ class Game:
         else:
             #disable player
             player.disabled = True
-            self.next_turn()
             return False
 
     def disable_player(self, player):
@@ -170,6 +170,9 @@ class Game:
         #increment next player index
 
         self.next_turn()
+        while(self.players[self.current_player_index].disabled):
+            self.next_turn()
+        return self.players[self.current_player_index]
 
 
     #other game logic
