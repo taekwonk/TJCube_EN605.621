@@ -109,13 +109,9 @@ def start_game(sid):
     room_id = player_list[sid]
     room = rooms[room_id]
     if(room is not None):
-        start_player_info = room.start_game()
+        start_player_info = room.start_game() #name, id
         sio.emit('message', 'Game started!', room_id)
         sio.emit('game_started', start_player_info, room_id)
-        
-
-
-#TODO: add limit to actions so they can only take 1 of each action each turn (move, suggest, accuse)
 
 @sio.on('move')
 def move(sid, tileName): #tileName: ex. Library, h_sh, etc.        
@@ -124,11 +120,19 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
 
     if(game.is_player_turn(sid)):
         if(game is not None):
+            player = game.get_player(sid)
+            if(player.moved):
+                sio.emit('message', 'You already moved.', sid)
+                return
+
             valid = game.player_moved(sid, tileName)
             if(valid):
-                player = game.get_player(sid)
+                        
+                player.moved = True
+                
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
                 sio.emit('moved')
+
         
 
 @sio.on('suggest')
@@ -142,6 +146,12 @@ def suggest(sid, case):
     if(game.is_player_turn(sid)):
         if(game is not None):
             player = game.get_player(sid)
+
+            if(player.suggested):
+                sio.emit('message', 'You already made a suggestion', sid)
+                return
+
+            player = game.get_player(sid)
             if(player.location.name != case['location']):
                 sio.emit('message', 'Player must be in the room that he is suggesting.', room_id)
                 return
@@ -151,6 +161,8 @@ def suggest(sid, case):
 
             sio.emit('message', 'Suggestion is made: Crime was committed in the {} by {} with the {}'.format(case['location'], case['suspect'], case['weapon']), room_id)
             result = game.suggestion_made(sid, case)
+            player.suggested = True
+
             if(result is False):
                 pass #invalid
             if(result['card'] is None):
@@ -195,6 +207,7 @@ def end_turn(sid):
     if(game.is_player_turn(sid)):
         player = game.get_player(sid)
         nextPlayer = game.end_turn(sid)
+
         sio.emit('message', '{} ended his/her turn'.format(player.name), room_id)
         sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
 

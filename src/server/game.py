@@ -124,6 +124,7 @@ class Game:
         if(to_tile is None or occupied is not None):
             return False
 
+        player.moved = True
         player.location = to_tile
         return True
     
@@ -138,6 +139,8 @@ class Game:
 
         #TODO: make this better
         case['location'] = player.location.name
+
+        player.suggested = True
 
         for p in self.players:
             #if(p.name is not player.name):
@@ -172,7 +175,11 @@ class Game:
         self.next_turn()
         while(self.players[self.current_player_index].disabled):
             self.next_turn()
-        return self.players[self.current_player_index]
+        nextPlayer = self.players[self.current_player_index]
+        nextPlayer.moved = False
+        nextPlayer.suggested = False
+
+        return nextPlayer
 
 
     #other game logic
