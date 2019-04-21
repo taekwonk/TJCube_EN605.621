@@ -6,6 +6,9 @@ class Player:
         self.location = None
         self.disabled = False
 
+        self.moved = False
+        self.suggested = False
+
 
     def initialize(self, cards, location):
         self.cards = cards
