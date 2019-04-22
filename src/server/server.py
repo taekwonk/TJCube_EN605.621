@@ -64,6 +64,7 @@ def create_room(sid):
 
     player_list[sid] = id 
     sio.emit('message', 'Room {} created. Joining game as {}'.format(id, name), room=id)
+    sio.emit('room_created', {'room_id': str(id), 'player_name': name}, sid)    
 
 @sio.on('join_room')
 def join_room(sid): #data = room_id
@@ -84,7 +85,7 @@ def join_room(sid): #data = room_id
                     player_list[sid] = key
 
                     sio.emit('message', 'Player joined as {}'.format(name), key)
-                    sio.emit('joined_game', {'key':str(key), 'name':name}, sid)
+                    sio.emit('joined_game', {'room_id':str(key), 'player_name':name}, sid)
                 else:
                     sio.emit('message', None, room=key)
 
@@ -131,7 +132,7 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
                 player.moved = True
                 
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
-                sio.emit('moved')
+                sio.emit('moved', {'name': player.name, 'location': player.location.name, room_id)
 
         
 
@@ -194,7 +195,7 @@ def accuse(sid, case):
             sio.emit('message', 'It is now {}''s turn'.format(nextPlayer), room_id)
 
 
-        sio.emit('accuse_result', {"is_correct": result})
+        sio.emit('accuse_result', {"is_correct": result}, room_id)
         
         #TODO: end game
 
