@@ -47,7 +47,11 @@ def on_game_started(data):
 @sio.on('moved')
 def on_moved(data): 
     print(data)
-    
+
+@sio.on('start_turn')
+def on_start_turn(data):
+    print(data)
+
 # Triggered when current player makes suggestion. Data contains information of the card shown by other player
 # This is only triggered if current player on this client makes suggestion and other players do not get this info.
 # data.name - name of the card shown
