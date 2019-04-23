@@ -3,7 +3,7 @@
 # Spring 2019 - Foundations of Software Engineering
 # TJ^3 Project Group
 #
-# This page was last modified (4.19.2019) by Jenna S. Nuth
+# This page was last modified (4.23.2019) by Jenna S. Nuth
 # Coding with Atom (=
 #
 # References:
@@ -14,6 +14,9 @@
 # SETTINGS
 
 import pygame as pg
+
+# Init Font
+pg.font.init()
 
 # RGB Colors          R      G       B
 WHITE       =   (   255,    255,    255 )
@@ -32,11 +35,11 @@ LIGHTGREY   =   (   100,    100,    100  )
 
 
 # Game Settings
-WINDOW_WIDTH = 1500   # 16 * 64 or 32 * 32 or 64 * 16
-WINDOW_HEIGHT = 700  # 16 * 48 or 32 * 24 or 64 * 12
+WINDOW_WIDTH = 1450   # 16 * 64 or 32 * 32 or 64 * 16
+WINDOW_HEIGHT = 750  # 16 * 48 or 32 * 24 or 64 * 12
 WINDOW_SET = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 FPS = 60
-TITLE = "Clue Mod"
+TITLE = "TJ^3 Clueless"
 BGCOLOR = BLACK
 
 # Board Settings
@@ -55,15 +58,18 @@ Y_MARGIN = int(WINDOW_HEIGHT - (BOARD_HEIGHT * TILE_SIZE) / 2)
 BG_COLOR_WINDOW = BLACK
 BG_COLOR_INFO_PANE = LIGHT_BLUE
 BOARD_GRID_LINE_COLOR = WHITE
+BTN_BG_COLOR = RED
 
+# Game Header
 # Font Style Key (object.render('TEXT', True, color))
-pg.font.init()
-TEXT_HEADER_FONT = pg.font.Font('freesansbold.ttf', 32)
-TEXT_COLOR_PARAGRAPH_FONT = pg.font.Font('freesansbold.ttf', 18)
 GAME_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
 GAME_HEADER = GAME_HEADER_FONT.render('CLUE', True, RED)
 GAME_HEADER_RECT = GAME_HEADER.get_rect()
-GAME_HEADER_RECT.midright = (1200, 50)
+GAME_HEADER_RECT.midright = (1125, 50)
+
+# General Font Style Key
+TEXT_HEADER_FONT = pg.font.Font('freesansbold.ttf', 32)
+TEXT_COLOR_PARAGRAPH_FONT = pg.font.Font('freesansbold.ttf', 18)
 
 # Tile Status
 FREE_TILE = 'FREE_TILE' # arbitrary but unique value
@@ -74,3 +80,27 @@ TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
 # Images
 
 # Sounds
+
+# Shortcut Method for Displaying Buttons ! Needs to be before buttons! 
+def makeButtonText(text, color, bgcolor, top, left):        
+    # Create the Surface and Rect objects for some text
+    textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
+# Board Buttons
+# -- Top Menu Options
+CREATE_GAME_BTN, CREATE_GAME_RECT = makeButtonText('Create Game', WHITE, RED, 775, 100)
+JOIN_GAME_BTN, JOIN_GAME_RECT = makeButtonText('Join Game', WHITE, RED, 950, 100)
+START_GAME_BTN, START_GAME_RECT = makeButtonText('Start Game', WHITE, RED, 1100, 100)
+QUIT_GAME_BTN, QUIT_GAME_RECT = makeButtonText('Quit Game', WHITE, RED, 1250, 100)
+# -- Player Action Items
+END_TURN_BTN, END_TURN_RECT = makeButtonText('Finish With Turn', WHITE, RED, 750, 650)
+MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT = makeButtonText('Make A Suggestion', WHITE, RED, 950, 650)
+MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT = makeButtonText('Make An Accusation', WHITE, RED, 1175, 650)
+
+# MOVE_UP_BTN 
+# MOVE_DOWN_BTN
+# MOVE_LEFT_BTN
+# MOVE_RIGHT_BTN
