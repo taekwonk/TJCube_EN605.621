@@ -119,7 +119,7 @@ class Game:
         valid_tiles = current_location.get_connected()
         to_tile = next((x for x in valid_tiles if x.name == tileName), None)
 
-        occupied = next((x for x in self.players if x.location == to_tile and not x.disabled), None)
+        occupied = next((x for x in self.players if x.location == to_tile and not x.disabled and x.location.type == TileType.Hall), None)
 
         if(to_tile is None or occupied is not None):
             return False
@@ -181,6 +181,17 @@ class Game:
 
         return nextPlayer
 
+    def get_player_locations(self):
+        #players = [{'name': a.name, 'location_name':a.location.name} for a in self.players]
+
+        d = {}
+        for player in self.players:
+            key = player.location.name
+            if key not in d:
+                d[key] = []
+            d[key].append(player.name)
+
+        return d
 
     #other game logic
 
