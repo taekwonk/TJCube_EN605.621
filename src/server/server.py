@@ -132,7 +132,7 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
                 player.moved = True
                 
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
-                sio.emit('moved', {'name': player.name, 'location': player.location.name, room_id)
+                sio.emit('moved', {'name': player.name, 'location': player.location.name}, room_id)
 
         
 
@@ -211,6 +211,7 @@ def end_turn(sid):
 
         sio.emit('message', '{} ended his/her turn'.format(player.name), room_id)
         sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
+        sio.emit('start_turn', 'It is your turn' ,nextPlayer.id)
 
 
 
