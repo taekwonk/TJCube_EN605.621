@@ -42,3 +42,5 @@ would be a nice feature). But you should show where each of the characters is.
 * Here are the original rules of the (Classic Edition) game. In later versions of the product, some
 of the rules may have changed and some features may have been added.
 http://www.hasbro.com/common/instruct/clueins.pdf
+
+![Screenshot](Clueless Screenshot 4.23.2019.PNG)
