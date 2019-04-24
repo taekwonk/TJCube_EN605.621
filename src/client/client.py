@@ -240,7 +240,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Kitchen' in data):
-        print('{0: ^8}'.format(join(ata['Kitchen'],',')), end="")
+        print('{0: ^8}'.format(join(data['Kitchen'],',')), end="")
     else:
         print('        ', end="")
     print('|')    
