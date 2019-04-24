@@ -112,7 +112,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Lounge' in data):
-        print('{0: ^8}'.format(join(ata['Lounge'],',')), end="")
+        print('{0: ^8}'.format(join(data['Lounge'],',')), end="")
     else:
         print('        ', end="")
     print('|')    
@@ -176,7 +176,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Dining Room' in data):
-        print('{0: ^8}'.format(join(ata['Dining Room'],',')), end="")
+        print('{0: ^8}'.format(join(data['Dining Room'],',')), end="")
     else:
         print('        ', end="")
     print('|')    

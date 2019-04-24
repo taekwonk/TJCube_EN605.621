@@ -58,6 +58,7 @@ class Game:
         suspects.append(Card("Mrs. White", CardType.CHARACTER))
         suspect_answer = suspects.pop(randrange(len(suspects)))
 
+
         #answer cards
         self.case_file = {'weapon': weapon_answer, 'room': room_answer, 'suspect': suspect_answer}
 
