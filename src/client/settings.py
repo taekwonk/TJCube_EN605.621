@@ -18,20 +18,24 @@ import pygame as pg
 # Init Font
 pg.font.init()
 
-# RGB Colors          R      G       B
-WHITE       =   (   255,    255,    255 )
-BLACK       =   (   0,      0,      0    )
-RED         =   (   128,    0,      0    )
-GREEN       =   (   0,      155,    0    )
-BLUE        =   (   0,      0,      128  )
-BROWN       =   (   174,    94,     0    )
-YELLOW      =   (   255,    255,    0    )
-GREEN       =   (   0,      128,    0    )
-GRAY        =   (   128,    128,    128  )
-PURPLE      =   (   128,    0,      128  )
-LIGHT_BLUE  =   (   100,    130,    200  )
-DARKGREY    =   (   40,     40,     40   )
-LIGHTGREY   =   (   100,    100,    100  )
+# RGB Colors             R      G       B
+WHITE        =   (   255,    255,    255  )
+BLACK        =   (   0,      0,      0    )
+OFF_BLACK    =   (   5,      5,      5    )
+RED          =   (   128,    0,      0    )
+GREEN        =   (   0,      155,    0    )
+BLUE         =   (   0,      0,      128  )
+BROWN        =   (   174,    94,     0    )
+YELLOW       =   (   255,    255,    0    )
+GREEN        =   (   0,      128,    0    )
+GRAY         =   (   128,    128,    128  )
+PURPLE       =   (   128,    0,      128  )
+LIGHT_BLUE   =   (   100,    130,    200  )
+LIGHT_GRAY   =   (   100,    100,    100  )
+DARK_GRAY    =   (   30,     30,     30   )
+ROOMS_GRAY   =   (   50,     50,     50   )
+HALLS_GRAY   =   (   75,     75,     75   )
+DARK_RED     =   (   76,     15,     15   )
 
 
 # Game Settings
@@ -55,7 +59,7 @@ X_MARGIN = int((WINDOW_WIDTH - (BOARD_WIDTH * TILE_SIZE)) / 2)
 Y_MARGIN = int(WINDOW_HEIGHT - (BOARD_HEIGHT * TILE_SIZE) / 2)
 
 # GUI Feature Color Key
-BG_COLOR_WINDOW = BLACK
+BG_COLOR_WINDOW = OFF_BLACK
 BG_COLOR_INFO_PANE = LIGHT_BLUE
 BOARD_GRID_LINE_COLOR = WHITE
 BTN_BG_COLOR = RED
@@ -81,8 +85,8 @@ TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
 
 # Sounds
 
-# Shortcut Method for Displaying Buttons ! Needs to be before buttons! 
-def makeButtonText(text, color, bgcolor, top, left):        
+# Shortcut Method for Displaying Buttons ! Needs to be before buttons!
+def makeButtonText(text, color, bgcolor, top, left):
     # Create the Surface and Rect objects for some text
     textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
     textRect = textSurf.get_rect()
@@ -100,7 +104,7 @@ END_TURN_BTN, END_TURN_RECT = makeButtonText('Finish With Turn', WHITE, RED, 750
 MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT = makeButtonText('Make A Suggestion', WHITE, RED, 950, 650)
 MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT = makeButtonText('Make An Accusation', WHITE, RED, 1175, 650)
 
-# MOVE_UP_BTN 
+# MOVE_UP_BTN
 # MOVE_DOWN_BTN
 # MOVE_LEFT_BTN
 # MOVE_RIGHT_BTN

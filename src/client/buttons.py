@@ -18,10 +18,6 @@ def joinGame():
 def startGame():
     pass
 
-# QUIT_GAME
-def quitGame():
-    pass
-
 # END_TURN
 # Finished with Turn Button
 def endTurn():

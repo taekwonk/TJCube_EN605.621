@@ -13,12 +13,24 @@
 # PyGame Client GUI
 # Reference: https://youtu.be/ajR4BZBKTr4
 #
+#
+# CHECKLIST:
+# on_room_created
+# on_joined_game
+# on_game_started
+# on_moved
+# on_start_turn
+#
+# Block tile when token leaves it
+# Multi-client connected to different players
+# 
 
 import pygame as pg
 import logging
 import sys
-from os import path
+import socketio
 
+from os import path
 from settings import *
 from sprites import *
 from settings import *
@@ -26,6 +38,18 @@ from characters import *
 from weapons import *
 from rooms import *
 from buttons import *
+
+# Set up the Server-Client Connection
+sio = socketio.Client()
+sio.connect('http://localhost:5000')
+
+@sio.on('connect')
+def on_connect():
+    print('Successfully connected to the server.')
+
+@sio.on('disconnect')
+def on_disconnect():
+    print('Successfully disconnected from the server.')
 
 class Game:
 
@@ -52,19 +76,35 @@ class Game:
         self.map_data = []
         with open(path.join(game_folder, 'map.txt'), 'rt') as f:
             for line in f:
-                self.map_data.append(line)        
+                self.map_data.append(line)
         logging.warning("Loading the board map.")
 
     def new(self):
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
+        self.rooms = pg.sprite.Group()
+        self.halls = pg.sprite.Group()
         for row, tiles in enumerate(self.map_data):
             for col, tile in enumerate(tiles):
+                if tile == 'R':
+                    Room(self, col, row)
+                if tile == 'H':
+                    Hall(self, col, row)
                 if tile == '0':
                     Wall(self, col, row)
                 if tile == '1':
                     self.player = Player(self, col, row, RED)
+                if tile == '2':
+                    self.player = Player(self, col, row, YELLOW)
+                if tile == '3':
+                    self.player = Player(self, col, row, WHITE)
+                if tile == '4':
+                    self.player = Player(self, col, row, GREEN)
+                if tile == '5':
+                    self.player = Player(self, col, row, BLUE)
+                if tile == '6':
+                    self.player = Player(self, col, row, PURPLE)
         logging.warning("Set up for a new game.")
 
     def run(self):
@@ -79,12 +119,12 @@ class Game:
 
     def quit(self):
         pg.quit()
-        sys.exit()        
+        sys.exit()
         logging.warning("Quit the game and shut the system down.")
 
     def update(self):
         # update portion of the game loop
-        self.all_sprites.update()        
+        self.all_sprites.update()
 
     def draw(self):
         self.screen.fill(BGCOLOR)
@@ -101,21 +141,21 @@ class Game:
         self.screen.blit(MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT)
         self.all_sprites.draw(self.screen)
         pg.display.flip()
-           
+
     def events(self):
         # catch all events here
         for event in pg.event.get():
             # Check for quit
-            if event.type == pg.QUIT:                
+            if event.type == pg.QUIT:
                 logging.warning("Event type = QUIT (Terminal Ctrl + C // Window X Button)")
                 self.quit()
             # Arrow Keys
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:   
-                    print("Event key = ESCAPE")   
+                if event.key == pg.K_ESCAPE:
+                    print("Event key = ESCAPE")
                     logging.warning("Event key = ESCAPE pressed")
-                    self.quit()
-                if event.key == pg.K_LEFT:   
+                    quitGame()
+                if event.key == pg.K_LEFT:
                     logging.warning("Event key (player move) = LEFT pressed")
                     self.player.move(dx=-1)
                 if event.key == pg.K_RIGHT:
@@ -133,32 +173,27 @@ class Game:
                 mouseclick = pg.mouse.get_pressed()
                 # Check if the user clicked on an option button
                 if CREATE_GAME_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     createGame()
-                    # Log to file / command line
                     logging.warning('Clicked on Create Game Button')
                 elif JOIN_GAME_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     joinGame()
                     logging.warning('Clicked on Join Game Button')
                 elif START_GAME_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     startGame()
                     logging.warning('Clicked on Start Game Button')
                 elif QUIT_GAME_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
-                    quitGame()
-                    logging.warning('Clicked on Quit Game Button')
+                    sio.disconnect()
+                    logging.warning('Disconnected from the Server')
+                    logging.warning('Clicking on Quit Game Button')
+                    self.quit()
+                    sys.exit()
                 elif END_TURN_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     endTurn()
                     logging.warning('Clicked on Finished With Turn / End Turn Button')
                 elif MAKE_SUGGESTION_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     makeSuggestion()
                     logging.warning('Clicked on Make A Suggestion Button')
                 elif MAKE_ACCUSATION_RECT.collidepoint(pos) and mouseclick:
-                    # Call desired function
                     makeAccusation()
                     logging.warning('Clicked on Make An Accusation Button')
 
@@ -168,7 +203,7 @@ class Game:
 
     def show_go_screen(self):
         pass
-    
+
 # Main Method
 def main():
     # Create the game object
