@@ -127,12 +127,13 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
                 return
 
             valid = game.player_moved(sid, tileName)
-            if(valid):
-                        
+            if(valid):                        
                 player.moved = True
                 
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
                 sio.emit('moved', {'name': player.name, 'location': player.location.name}, room_id)
+            else:
+                sio.emit('message', 'Hall is already occupied', sid)
 
         
 
@@ -171,7 +172,7 @@ def suggest(sid, case):
                 sio.emit('message', 'No one had matching card', room_id)
             else:
                 sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
-                sio.emit('suggest_result', {'name': result['card'].name, 'type': str(result['card'].type)}, sid )
+                sio.emit('suggest_result', {'player_name': result['player_name'], 'name': result['card'].name, 'type': str(result['card'].type)}, sid )
 
 
 
@@ -192,7 +193,7 @@ def accuse(sid, case):
         else: #
             sio.emit('message', '{} made a wrong accuation. Player cannot make a move from this point.'.format(player.name), room_id)
             nextPlayer = game.end_turn(sid)
-            sio.emit('message', 'It is now {}''s turn'.format(nextPlayer), room_id)
+            sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
 
 
         sio.emit('accuse_result', {"is_correct": result}, room_id)
@@ -213,6 +214,13 @@ def end_turn(sid):
         sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
         sio.emit('start_turn', 'It is your turn' ,nextPlayer.id)
 
+@sio.on('get_all_location')
+def get_all_location(sid):
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    players = game.get_player_locations()
+    sio.emit('all_locations', players, sid)
 
 
 if __name__ == '__main__':
