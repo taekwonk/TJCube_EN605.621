@@ -1,4 +1,4 @@
-# Johns Hopkins University - Whiting School of Engineering
+\# Johns Hopkins University - Whiting School of Engineering
 # Engineering for Professionals
 # Spring 2019 - Foundations of Software Engineering
 # TJ^3 Project Group
@@ -23,7 +23,7 @@
 #
 # Block tile when token leaves it
 # Multi-client connected to different players
-# 
+#
 
 import pygame as pg
 import logging
@@ -128,13 +128,47 @@ class Game:
 
     def draw(self):
         self.screen.fill(BGCOLOR)
-        # Title in right side of window
+        # Titles of window
         self.screen.blit(GAME_HEADER, GAME_HEADER_RECT)
+        self.screen.blit(PLAYER_ID_HEADER, PLAYER_ID_HEADER_RECT)
+        self.screen.blit(YOUR_CARDS_HEADER, YOUR_CARDS_HEADER_RECT)
+        self.screen.blit(KNOWN_INFO_HEADER, KNOWN_INFO_HEADER_RECT)
+        self.screen.blit(PLAYER_TURN_HEADER, PLAYER_TURN_HEADER_RECT)
         # Add Top Buttons
         self.screen.blit(CREATE_GAME_BTN, CREATE_GAME_RECT)
         self.screen.blit(JOIN_GAME_BTN, JOIN_GAME_RECT)
         self.screen.blit(START_GAME_BTN, START_GAME_RECT)
         self.screen.blit(QUIT_GAME_BTN, QUIT_GAME_RECT)
+        # Cards Display Boxes (Y at 200)
+        pg.draw.rect(WINDOW_SET, RED, (725,200, 675, 75))
+        pg.draw.line(WINDOW_SET, BLACK, (800,200), (800,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (875,200), (875,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (950,200), (950,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1025,200), (1025,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1100,200), (1100,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1175,200), (1175,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1250,200), (1250,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1325,200), (1325,275), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1400,200), (1400,275), 5)
+        # Cards Display Titles
+        self.screen.blit(CARD_1, CARD_1_RECT)
+        self.screen.blit(CARD_2, CARD_2_RECT)
+        self.screen.blit(CARD_3, CARD_3_RECT)
+        self.screen.blit(CARD_4, CARD_4_RECT)
+        self.screen.blit(CARD_5, CARD_5_RECT)
+        self.screen.blit(CARD_6, CARD_6_RECT)
+        self.screen.blit(CARD_7, CARD_7_RECT)
+        self.screen.blit(CARD_8, CARD_8_RECT)
+        self.screen.blit(CARD_9, CARD_9_RECT)
+        # So&So's Turn
+        # Known Information Section Boxes (Y at 350)
+        pg.draw.rect(WINDOW_SET, RED, (725, 350, 675, 275))
+        pg.draw.line(WINDOW_SET, BLACK, (950,350), (950,625), 5)
+        pg.draw.line(WINDOW_SET, BLACK, (1175,350), (1175,625), 5)
+        # Known Information Section Titles
+        self.screen.blit(CHARACTERS_SECTION, CHARACTERS_SECTION_RECT)
+        self.screen.blit(WEAPONS_SECTION, WEAPONS_SECTION_RECT)
+        self.screen.blit(ROOMS_SECTION, ROOMS_SECTION_RECT)
         # Add Bottom Buttons
         self.screen.blit(END_TURN_BTN, END_TURN_RECT)
         self.screen.blit(MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT)
