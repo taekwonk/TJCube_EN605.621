@@ -18,12 +18,12 @@ TO-DO
 7. If a player quits the game [or loses?], their cards are dispersed among remaining players
 8. Making a suggestion / accusation transports a player into the room
 9. Buttons for secret passage way swaps on corners
-10. Known information is highlighted or checked off by player
+10. Known information as checkbox options to be checked off by player
 11. Player turn logic and GUI identification
         Move 1 space per Turn
         Make 1 suggestion per Turn when inside a room
         Make 1 accusation per Turn anytime
         * Need button for pass turn (if cannot move)
         * Need button for finished with turn (if not automatic)
-12. Player 1 has option to start game 
+12. Player 1 has option to start game
 ...?
