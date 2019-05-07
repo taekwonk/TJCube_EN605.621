@@ -2,6 +2,7 @@ install following packages
 requests
 python-socketio
 eventlet
+pygame
 
 TO-DO
 1. Connect multiple clients to various character tokens (IN PROGRESS)

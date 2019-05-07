@@ -23,6 +23,10 @@ class Game:
         self.suspect_initial_locations = ["h_hl", "h_sl", "h_lc", "h_cb", "h_bk", "h_ld"]
         self.card_list = []
 
+        self.isSuggestPhase = False
+        self.suggestPlayerTurn = 0
+        self.suggestInitiatedPlayerIndex = 0
+
     def initialize_game(self):
         #create cards, shuffle and put 1 of each type to case file
         #shuffle rest of the cards and deal to each player
@@ -57,6 +61,7 @@ class Game:
         suspects.append(Card("Mr. Green", CardType.CHARACTER))
         suspects.append(Card("Mrs. White", CardType.CHARACTER))
         suspect_answer = suspects.pop(randrange(len(suspects)))
+
 
         #answer cards
         self.case_file = {'weapon': weapon_answer, 'room': room_answer, 'suspect': suspect_answer}
@@ -108,7 +113,7 @@ class Game:
         return next((x for x in self.players if x.id == player_id), None)
 
     def is_player_turn(self, player_id):
-        return self.players[self.current_player_index].id == player_id
+        return self.players[self.current_player_index].id == player_id and self.isSuggestPhase == False
 
     def player_moved(self, player_id, tileName):
         #validate move
@@ -119,7 +124,7 @@ class Game:
         valid_tiles = current_location.get_connected()
         to_tile = next((x for x in valid_tiles if x.name == tileName), None)
 
-        occupied = next((x for x in self.players if x.location == to_tile and not x.disabled), None)
+        occupied = next((x for x in self.players if x.location == to_tile and not x.disabled and x.location.type == TileType.Hall), None)
 
         if(to_tile is None or occupied is not None):
             return False
@@ -142,13 +147,36 @@ class Game:
 
         player.suggested = True
 
-        for p in self.players:
-            #if(p.name is not player.name):
-            card = next((x for x in p.cards if x.name == case['suspect'] or x.name == case['weapon'] or x.name == case['location']), None)
-            if(card is not None):
-                return {"card": card, "player_name": p.name}
+        self.isSuggestPhase = True
+
+        self.suggestInitiatedPlayerIndex = self.current_player_index
+        self.suggestPlayerTurn = self.current_player_index -1
+
+        return self.players[self.suggestPlayerTurn].id
+
+        # for p in self.players:
+        #     #if(p.name is not player.name):
+        #     card = next((x for x in p.cards if x.name == case['suspect'] or x.name == case['weapon'] or x.name == case['location']), None)
+        #     if(card is not None):
+        #         return {"card": card, "player_name": p.name}
         
-        return {"card": None}
+        # return {"card": None}
+
+    def suggestion_reacted(self, player_id, card):
+        if card is None:
+            self.suggestPlayerTurn = self.suggestPlayerTurn - 1
+            if self.players[self.suggestPlayerTurn].id == self.players[self.suggestInitiatedPlayerIndex].id:
+                self.isSuggestPhase = False
+                return {"card": None} #went around all players except one who made suggestion and no one had the card
+            return self.players[self.suggestPlayerTurn].id # otherwise return the next player id to react to the suggestion
+        else:
+            self.isSuggestPhase = False
+            p = self.get_player(player_id)
+            return {"card": card, "player_name": p.name}
+
+    def is_player_suggest_react_turn(self, player_id):
+        return self.players[self.suggestPlayerTurn].id == player_id
+    
 
     def accusation_made(self, player_id, case):
         player = self.get_player(player_id)
@@ -181,6 +209,17 @@ class Game:
 
         return nextPlayer
 
+    def get_player_locations(self):
+        #players = [{'name': a.name, 'location_name':a.location.name} for a in self.players]
+
+        d = {}
+        for player in self.players:
+            key = player.location.name
+            if key not in d:
+                d[key] = []
+            d[key].append(player.name)
+
+        return d
 
     #other game logic
 

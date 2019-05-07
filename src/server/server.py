@@ -127,12 +127,13 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
                 return
 
             valid = game.player_moved(sid, tileName)
-            if(valid):
-                        
+            if(valid):                        
                 player.moved = True
                 
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
                 sio.emit('moved', {'name': player.name, 'location': player.location.name}, room_id)
+            else:
+                sio.emit('message', 'Hall is already occupied or you have made an invalid move', sid)
 
         
 
@@ -161,19 +162,46 @@ def suggest(sid, case):
                 return
 
             sio.emit('message', 'Suggestion is made: Crime was committed in the {} by {} with the {}'.format(case['location'], case['suspect'], case['weapon']), room_id)
-            result = game.suggestion_made(sid, case)
-            player.suggested = True
+            # result = game.suggestion_made(sid, case)
+            # player.suggested = True
 
-            if(result is False):
-                pass #invalid
+            # if(result is False):
+            #     pass #invalid
+            # if(result['card'] is None):
+            #     #no one had matching card
+            #     sio.emit('message', 'No one had matching card', room_id)
+            # else:
+            #     sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
+            #     sio.emit('suggest_result', {'player_name': result['player_name'], 'name': result['card'].name, 'type': str(result['card'].type)}, sid )
+
+            p_id = game.suggestion_made(sid, case)
+            next_player = game.get_player(p_id)
+            sio.emit('message', 'It is {}''s turn to react to the suggestion.'.format(next_player.name))
+            sio.emit('suggest_react', case, p_id)
+
+@sio.on('suggest_reacted')
+def suggest_reacted(sid, card):
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    if(game.is_player_suggest_react_turn(sid)):
+        result = game.suggestion_reacted(sid, card)
+        if(type(result) is dict):
             if(result['card'] is None):
                 #no one had matching card
                 sio.emit('message', 'No one had matching card', room_id)
             else:
                 sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
-                sio.emit('suggest_result', {'name': result['card'].name, 'type': str(result['card'].type)}, sid )
-
-
+            
+            print('suggest_result', game.players[game.suggestInitiatedPlayerIndex].id)
+            sio.emit('suggest_result', {'player_name': result['player_name'], 'name': result['card']['name'], 'type': str(result['card']['type'])},
+                    game.players[game.suggestInitiatedPlayerIndex].id )
+        else:
+            next_player = game.get_player(result)
+            sio.emit('message', 'It is {}''s turn to react to the suggestion.'.format(next_player.name))            
+            sio.emit('suggest_react', case, result) #in this case result is p_id
+    else:
+        sio.emit('message', 'It is not your turn to react to suggestion.', sid)
 
 @sio.on('accuse')
 def accuse(sid, case):
@@ -192,7 +220,7 @@ def accuse(sid, case):
         else: #
             sio.emit('message', '{} made a wrong accuation. Player cannot make a move from this point.'.format(player.name), room_id)
             nextPlayer = game.end_turn(sid)
-            sio.emit('message', 'It is now {}''s turn'.format(nextPlayer), room_id)
+            sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
 
 
         sio.emit('accuse_result', {"is_correct": result}, room_id)
@@ -213,7 +241,26 @@ def end_turn(sid):
         sio.emit('message', 'It is now {}''s turn'.format(nextPlayer.name), room_id)
         sio.emit('start_turn', 'It is your turn' ,nextPlayer.id)
 
+@sio.on('my_hand')
+def my_hand(sid):
+    room_id = player_list[sid]
+    game = rooms[room_id]
 
+    player = game.get_player(sid)
+
+    cards = []
+    for card in player.cards:
+        cards.append({'name': card.name, 'type': str(card.type)})
+
+    sio.emit('my_hand', cards, sid)
+
+@sio.on('get_all_location')
+def get_all_location(sid):
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    players = game.get_player_locations()
+    sio.emit('all_locations', players, sid)
 
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen((host,port)), app)
