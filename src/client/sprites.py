@@ -39,7 +39,7 @@ class Wall(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILE_SIZE, TILE_SIZE))
-        self.image.fill(DARKGREY)
+        self.image.fill(BLACK)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -52,27 +52,22 @@ class Room(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILE_SIZE, TILE_SIZE))
-        self.imgae.fill(WHITE)
+        self.image.fill(ROOMS_GRAY)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x * TILE_SIZE
         self.rect.y = y * TILE_SIZE
 
-# Not use sprite, Use class ..?
-class Button(pg.sprite.Sprite):
-    def __init__(self, text, x, y, width, height, color):
-        super().__init__()
-        self.image = pg.Surface((width, height))
-        self.image.fill(colour)
+class Hall(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.rooms
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILE_SIZE, TILE_SIZE))
+        self.image.fill(HALLS_GRAY)
         self.rect = self.image.get_rect()
-        txt = buttonFont.render(text, True, textColour)
-        txtRect = txt.get_rect(center = self.rect.center)
-        self.image.blit(txt, txtRect)
-        self.rect.topleft = x, y
-
-    def isPressed(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                return True
-        return False
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILE_SIZE
+        self.rect.y = y * TILE_SIZE
