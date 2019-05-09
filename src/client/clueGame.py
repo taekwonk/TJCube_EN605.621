@@ -24,6 +24,8 @@
 # Block tile when token leaves it
 # Multi-client connected to different players
 #
+# http://www.mechanicalcat.net/richard/log/Python/PyGame_sample__drawing_a_map__and_moving_around_it
+#
 
 import pygame as pg
 import logging
@@ -38,6 +40,7 @@ from characters import *
 from weapons import *
 from rooms import *
 from buttons import *
+from checkboxes import *
 
 # Set up the Server-Client Connection
 sio = socketio.Client()
@@ -67,7 +70,7 @@ class Game:
         self.screen = WINDOW_SET
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
-        pg.key.set_repeat(500, 100)
+        pg.key.set_repeat() # 1 move per key press
         self.load_data()
         logging.warning("Setting up basic configurations.")
 
@@ -85,6 +88,8 @@ class Game:
         self.walls = pg.sprite.Group()
         self.rooms = pg.sprite.Group()
         self.halls = pg.sprite.Group()
+
+        # INSTEAD: Have sprite create upon client connection up to 6 / start game
         for row, tiles in enumerate(self.map_data):
             for col, tile in enumerate(tiles):
                 if tile == 'R':
@@ -94,11 +99,11 @@ class Game:
                 if tile == '0':
                     Wall(self, col, row)
                 if tile == '1':
-                    self.player = Player(self, col, row, RED)
+                    self.playerScarlet = Player(self, col, row, RED)
                 if tile == '2':
                     self.player = Player(self, col, row, YELLOW)
-                if tile == '3':
-                    self.player = Player(self, col, row, WHITE)
+            #    if tile == '3':
+            #        self.player = Player(self, col, row, WHITE)
                 if tile == '4':
                     self.player = Player(self, col, row, GREEN)
                 if tile == '5':
@@ -169,6 +174,32 @@ class Game:
         self.screen.blit(CHARACTERS_SECTION, CHARACTERS_SECTION_RECT)
         self.screen.blit(WEAPONS_SECTION, WEAPONS_SECTION_RECT)
         self.screen.blit(ROOMS_SECTION, ROOMS_SECTION_RECT)
+        # Known Information Character Check Titles
+        self.screen.blit(CHECK_CHAR_GREEN, CHECK_CHAR_GREEN_RECT)
+        self.screen.blit(CHECK_CHAR_MUSTARD, CHECK_CHAR_MUSTARD_RECT)
+        self.screen.blit(CHECK_CHAR_PEACOCK, CHECK_CHAR_PEACOCK_RECT)
+        self.screen.blit(CHECK_CHAR_PLUM, CHECK_CHAR_PLUM_RECT)
+        self.screen.blit(CHECK_CHAR_SCARLET, CHECK_CHAR_SCARLET_RECT)
+        self.screen.blit(CHECK_CHAR_WHITE, CHECK_CHAR_WHITE_RECT)
+        # Known Information Weapon Check Titles
+        self.screen.blit(CHECK_WEAPON_CANDLESTICK, CHECK_WEAPON_CANDLESTICK_RECT)
+        self.screen.blit(CHECK_WEAPON_KNIFE, CHECK_WEAPON_KNIFE_RECT)
+        self.screen.blit(CHECK_WEAPON_LEAD_PIPE, CHECK_WEAPON_LEAD_PIPE_RECT)
+        self.screen.blit(CHECK_WEAPON_REVOLVER, CHECK_WEAPON_REVOLVER_RECT)
+        self.screen.blit(CHECK_WEAPON_ROPE, CHECK_WEAPON_ROPE_RECT)
+        self.screen.blit(CHECK_WEAPON_WRENCH, CHECK_WEAPON_WRENCH_RECT)
+        # Known Information Room Check Titles
+        self.screen.blit(CHECK_ROOM_BALLROOM, CHECK_ROOM_BALLROOM_RECT)
+        self.screen.blit(CHECK_ROOM_BILLIARD, CHECK_ROOM_BILLIARD_RECT)
+        self.screen.blit(CHECK_ROOM_CONSERVATORY, CHECK_ROOM_CONSERVATORY_RECT)
+        self.screen.blit(CHECK_ROOM_DINING_ROOM, CHECK_ROOM_DINING_ROOM_RECT)
+        self.screen.blit(CHECK_ROOM_HALL, CHECK_ROOM_HALL_RECT)
+        self.screen.blit(CHECK_ROOM_KITCHEN, CHECK_ROOM_KITCHEN_RECT)
+        self.screen.blit(CHECK_ROOM_LIBRARY, CHECK_ROOM_LIBRARY_RECT)
+        self.screen.blit(CHECK_ROOM_LOUNGE, CHECK_ROOM_LOUNGE_RECT)
+        self.screen.blit(CHECK_ROOM_STUDY, CHECK_ROOM_STUDY_RECT)
+        # Checks
+        self.screen.blit(GREEN_BOX_RECT)
         # Add Bottom Buttons
         self.screen.blit(END_TURN_BTN, END_TURN_RECT)
         self.screen.blit(MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT)
@@ -230,6 +261,13 @@ class Game:
                 elif MAKE_ACCUSATION_RECT.collidepoint(pos) and mouseclick:
                     makeAccusation()
                     logging.warning('Clicked on Make An Accusation Button')
+                # Checkboxes - currently being overwritten so need to save state...
+                elif CHECKBOX_GREEN_RECT.collidepoint(pos) and mouseclick:
+                    GREEN_BOX=(CHECKBOX_GREEN_CHECKED, CHECKBOX_GREEN_CHECKED_RECT)
+                    logging.warning('Checked GREEN')
+                elif CHECKBOX_GREEN_CHECKED_RECT.collidepoint(pos) and mouseclick:
+                    self.screen.blit(CHECKBOX_GREEN, CHECKBOX_GREEN_RECT)
+                    logging.warning('Unchecked GREEN')
 
 
     def show_start_screen(self):
