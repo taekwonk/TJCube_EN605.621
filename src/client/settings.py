@@ -89,7 +89,13 @@ YOUR_CARDS_HEADER_RECT.midright = (1130, 160)
 PLAYER_TURN_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
 PLAYER_TURN_HEADER = PLAYER_TURN_HEADER_FONT.render('TURN :', True, RED)
 PLAYER_TURN_HEADER_RECT = PLAYER_TURN_HEADER.get_rect()
-PLAYER_TURN_HEADER_RECT.midleft = (100, 625)
+PLAYER_TURN_HEADER_RECT.midleft = (50, 625)
+
+# Player Position Section Header
+PLAYER_POSITION_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
+PLAYER_POSITION_HEADER = PLAYER_POSITION_HEADER_FONT.render('Location :', True, RED)
+PLAYER_POSITION_HEADER_RECT = PLAYER_POSITION_HEADER.get_rect()
+PLAYER_POSITION_HEADER_RECT.midleft = (50, 690)
 
 # Known Information Section Header
 KNOWN_INFO_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
@@ -102,6 +108,7 @@ KNOWN_INFO_HEADER_RECT.midright = (1185, 315)
 # General Font Style Key
 TEXT_HEADER_FONT = pg.font.Font('freesansbold.ttf', 32)
 TEXT_COLOR_PARAGRAPH_FONT = pg.font.Font('freesansbold.ttf', 18)
+TEXT_COLOR_SP_FONT = pg.font.Font('freesansbold.ttf', 12)
 
 # Tile Status
 FREE_TILE = 'FREE_TILE' # arbitrary but unique value
@@ -123,16 +130,29 @@ def makeButtonText(text, color, bgcolor, top, left):
     textRect.topleft = (top, left)
     return (textSurf, textRect)
 
+def makeSecretPassageButtonWithText(text, color, bgcolor, top, left):
+    # Create the Surface and Rect objects for some text
+    textSurf = TEXT_COLOR_SP_FONT.render(text, True, color, bgcolor)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
 # Board Buttons
-# -- Top Menu Options
+# -- Top Menu Options --
 CREATE_GAME_BTN, CREATE_GAME_RECT = makeButtonText('Create Game', WHITE, RED, 775, 100)
 JOIN_GAME_BTN, JOIN_GAME_RECT = makeButtonText('Join Game', WHITE, RED, 950, 100)
 START_GAME_BTN, START_GAME_RECT = makeButtonText('Start Game', WHITE, RED, 1100, 100)
 QUIT_GAME_BTN, QUIT_GAME_RECT = makeButtonText('Quit Game', WHITE, RED, 1250, 100)
-# -- Player Action Items
+# -- Player Action Items --
 END_TURN_BTN, END_TURN_RECT = makeButtonText('Finish With Turn', WHITE, RED, 750, 650)
 MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT = makeButtonText('Make A Suggestion', WHITE, RED, 950, 650)
 MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT = makeButtonText('Make An Accusation', WHITE, RED, 1175, 650)
+# -- Swap Room Buttons --
+TO_KITCHEN_BTN, TO_KITCHEN_BTN_RECT = makeSecretPassageButtonWithText('To Kitchen', WHITE, RED, 20, 200)
+TO_STUDY_BTN, TO_STUDY_BTN_RECT = makeSecretPassageButtonWithText('To Study', WHITE, RED, 20, 225)
+TO_CONSERVATORY_BTN, TO_CONSERVATORY_BTN_RECT = makeSecretPassageButtonWithText('To Conservatory', WHITE, RED, 20, 450)
+TO_LOUNGE_BTN, TO_LOUNGE_BTN_RECT = makeSecretPassageButtonWithText('To Lounge', WHITE, RED, 20, 475)
+
 
 # INFORMATION DISPLAYS ------------------------------
 

@@ -40,19 +40,25 @@ from characters import *
 from weapons import *
 from rooms import *
 from buttons import *
-from checkboxes import *
+from logic import *
 
 # Set up the Server-Client Connection
 sio = socketio.Client()
 sio.connect('http://localhost:5000')
 
-@sio.on('connect')
-def on_connect():
-    print('Successfully connected to the server.')
+clientNumber = 0
+hand = 0
 
-@sio.on('disconnect')
-def on_disconnect():
-    print('Successfully disconnected from the server.')
+suspects = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Mrs. White", "Colonel Mustard"]
+weapons = ["Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver"]
+rooms = ["Study", "Hall", "Lounge", "Library", "Billiard Room", "Dining Room", "Conservatory", "Ballroom", "Kitchen"]
+
+player1 = suspects[0]
+player2 = suspects[1]
+player3 = suspects[2]
+player4 = suspects[3]
+player5 = suspects[4]
+player6 = suspects[5]
 
 class Game:
 
@@ -67,12 +73,14 @@ class Game:
 
     def __init__(self):
         pg.init()
+        self.players = []
         self.screen = WINDOW_SET
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         pg.key.set_repeat() # 1 move per key press
         self.load_data()
         logging.warning("Setting up basic configurations.")
+        self.all_sprites = pg.sprite.Group()
 
     def load_data(self):
         game_folder = path.dirname(__file__)
@@ -82,35 +90,64 @@ class Game:
                 self.map_data.append(line)
         logging.warning("Loading the board map.")
 
-    def new(self):
+    def new_board(self):
         # initialize all variables and do all the setup for a new game
-        self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.rooms = pg.sprite.Group()
         self.halls = pg.sprite.Group()
+        self.player = pg.sprite.Group()
 
         # INSTEAD: Have sprite create upon client connection up to 6 / start game
         for row, tiles in enumerate(self.map_data):
             for col, tile in enumerate(tiles):
-                if tile == 'R':
-                    Room(self, col, row)
+                # Set Board Tiles
                 if tile == 'H':
-                    Hall(self, col, row)
+                    Hall(self, col, row, "Hall")
                 if tile == '0':
                     Wall(self, col, row)
+                # Rooms assigned to numbers
                 if tile == '1':
-                    self.playerScarlet = Player(self, col, row, RED)
+                    Room(self, col, row, "Study")
                 if tile == '2':
-                    self.player = Player(self, col, row, YELLOW)
-            #    if tile == '3':
-            #        self.player = Player(self, col, row, WHITE)
+                    Room(self, col, row, "Hall")
+                if tile == '3':
+                    Room(self, col, row, "Lounge")
                 if tile == '4':
-                    self.player = Player(self, col, row, GREEN)
+                    Room(self, col, row, "Library")
                 if tile == '5':
-                    self.player = Player(self, col, row, BLUE)
+                    Room(self, col, row, "Billiard Room")
                 if tile == '6':
-                    self.player = Player(self, col, row, PURPLE)
-        logging.warning("Set up for a new game.")
+                    Room(self, col, row, "Dining Room")
+                if tile == '7':
+                    Room(self, col, row, "Conservatory")
+                if tile == '8':
+                    Room(self, col, row, "Ballroom")
+                if tile == '9':
+                    Room(self, col, row, "Kitchen")
+
+                # Need to spawn player with each client
+                # Starting Player Token / Tiles
+                # --- Player1 = Scarlet
+                if tile == 'S':
+                    self.player = Player(self, col, row, RED, player1)
+                # --- Player2 = Mustard
+                if tile == 'M':
+                    self.player = Player(self, col, row, YELLOW, player2)
+                # --- Player3 = White
+                if tile == 'W':
+                    self.player = Player(self, col, row, WHITE, player3)
+                # --- Player4 = Green
+                if tile == 'G':
+                    self.player = Player(self, col, row, GREEN, player4)
+                # --- Player5 = Peacock
+                if tile == 'B':
+                    self.player = Player(self, col, row, BLUE, player5)
+                # --- Player6 = Plum
+                if tile == 'P':
+                    self.player = Player(self, col, row, PURPLE, player6)
+
+        logging.warning("Set up board for a new game.")
+
 
     def run(self):
         # game loop - set self.playing = False to end the game
@@ -139,11 +176,17 @@ class Game:
         self.screen.blit(YOUR_CARDS_HEADER, YOUR_CARDS_HEADER_RECT)
         self.screen.blit(KNOWN_INFO_HEADER, KNOWN_INFO_HEADER_RECT)
         self.screen.blit(PLAYER_TURN_HEADER, PLAYER_TURN_HEADER_RECT)
+        self.screen.blit(PLAYER_POSITION_HEADER, PLAYER_POSITION_HEADER_RECT)
         # Add Top Buttons
         self.screen.blit(CREATE_GAME_BTN, CREATE_GAME_RECT)
         self.screen.blit(JOIN_GAME_BTN, JOIN_GAME_RECT)
         self.screen.blit(START_GAME_BTN, START_GAME_RECT)
         self.screen.blit(QUIT_GAME_BTN, QUIT_GAME_RECT)
+        # Add Secret Passage Way Buttons
+        self.screen.blit(TO_KITCHEN_BTN, TO_KITCHEN_BTN_RECT)
+        self.screen.blit(TO_STUDY_BTN, TO_STUDY_BTN_RECT)
+        self.screen.blit(TO_CONSERVATORY_BTN, TO_CONSERVATORY_BTN_RECT)
+        self.screen.blit(TO_LOUNGE_BTN, TO_LOUNGE_BTN_RECT)
         # Cards Display Boxes (Y at 200)
         pg.draw.rect(WINDOW_SET, RED, (725,200, 675, 75))
         pg.draw.line(WINDOW_SET, BLACK, (800,200), (800,275), 5)
@@ -199,7 +242,6 @@ class Game:
         self.screen.blit(CHECK_ROOM_LOUNGE, CHECK_ROOM_LOUNGE_RECT)
         self.screen.blit(CHECK_ROOM_STUDY, CHECK_ROOM_STUDY_RECT)
         # Checks
-        self.screen.blit(GREEN_BOX_RECT)
         # Add Bottom Buttons
         self.screen.blit(END_TURN_BTN, END_TURN_RECT)
         self.screen.blit(MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT)
@@ -208,7 +250,7 @@ class Game:
         pg.display.flip()
 
     def events(self):
-        # catch all events here
+        # All events caught here
         for event in pg.event.get():
             # Check for quit
             if event.type == pg.QUIT:
@@ -238,13 +280,13 @@ class Game:
                 mouseclick = pg.mouse.get_pressed()
                 # Check if the user clicked on an option button
                 if CREATE_GAME_RECT.collidepoint(pos) and mouseclick:
-                    createGame()
+                    sio.emit('create_game')
                     logging.warning('Clicked on Create Game Button')
                 elif JOIN_GAME_RECT.collidepoint(pos) and mouseclick:
-                    joinGame()
+                    sio.emit('join_room')
                     logging.warning('Clicked on Join Game Button')
                 elif START_GAME_RECT.collidepoint(pos) and mouseclick:
-                    startGame()
+                    sio.emit('start_game')
                     logging.warning('Clicked on Start Game Button')
                 elif QUIT_GAME_RECT.collidepoint(pos) and mouseclick:
                     sio.disconnect()
@@ -253,7 +295,7 @@ class Game:
                     self.quit()
                     sys.exit()
                 elif END_TURN_RECT.collidepoint(pos) and mouseclick:
-                    endTurn()
+                    sio.emit('end_turn')
                     logging.warning('Clicked on Finished With Turn / End Turn Button')
                 elif MAKE_SUGGESTION_RECT.collidepoint(pos) and mouseclick:
                     makeSuggestion()
@@ -261,6 +303,20 @@ class Game:
                 elif MAKE_ACCUSATION_RECT.collidepoint(pos) and mouseclick:
                     makeAccusation()
                     logging.warning('Clicked on Make An Accusation Button')
+                # Buttons for Secret Passage Ways
+                elif TO_KITCHEN_BTN_RECT.collidepoint(pos) and mouseclick:
+                    passageToKitchen()
+                    logging.warning('Taking the passage way to the Kitchen')
+                elif TO_STUDY_BTN_RECT.collidepoint(pos) and mouseclick:
+                    passageToStudy()
+                    logging.warning('Taking the passage way to the Study')
+                elif TO_CONSERVATORY_BTN_RECT.collidepoint(pos) and mouseclick:
+                    passageToConservatory()
+                    logging.warning('Taking the passage way to the Conservatory')
+                elif TO_LOUNGE_BTN_RECT.collidepoint(pos) and mouseclick:
+                    passageToLounge()
+                    logging.warning('Taking the passage way to the Lounge')
+
                 # Checkboxes - currently being overwritten so need to save state...
                 elif CHECKBOX_GREEN_RECT.collidepoint(pos) and mouseclick:
                     GREEN_BOX=(CHECKBOX_GREEN_CHECKED, CHECKBOX_GREEN_CHECKED_RECT)
@@ -268,7 +324,6 @@ class Game:
                 elif CHECKBOX_GREEN_CHECKED_RECT.collidepoint(pos) and mouseclick:
                     self.screen.blit(CHECKBOX_GREEN, CHECKBOX_GREEN_RECT)
                     logging.warning('Unchecked GREEN')
-
 
     def show_start_screen(self):
         pass
@@ -282,7 +337,7 @@ def main():
     g = Game()
     g.show_start_screen()
     while True:
-        g.new()
+        g.new_board()
         g.run()
         g.show_go_screen()
 
