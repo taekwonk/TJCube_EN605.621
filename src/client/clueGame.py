@@ -21,6 +21,8 @@
 # Display Player Location
 # Functionality behind passage way buttons
 # Save popDialog selected option in function
+# Checkbox / Button change text color of known information (last priority)
+# Room conditional states
 #
 # https://github.com/miguelgrinberg/Flask-SocketIO/issues/822
 #
@@ -138,7 +140,7 @@ def on_accuse_result(data):
     pass
     #print(data)
 
-# What is this...? --------------
+# Need???? --------------
 def join(l, sep):
     out = ''
     for i, el in enumerate(l):
@@ -156,7 +158,7 @@ suspects = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Mrs.
 weapons = ["Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver"]
 rooms = ["Study", "Hall", "Lounge", "Library", "Billiard Room", "Dining Room", "Conservatory", "Ballroom", "Kitchen"]
 
-# Text based move selection
+# Text based move selection -- not sure needed but added in case
 def join_selection(l, abbreviate):
     out = ''
     for i, el in enumerate(l):
@@ -306,9 +308,6 @@ class Game:
         selectBtn.grid(row=4, column=1)
 
         tk.mainloop()
-
-#    def displayServerData():
-
 
     def run(self):
         # game loop - set self.playing = False to end the game
