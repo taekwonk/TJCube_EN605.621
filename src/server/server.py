@@ -45,6 +45,8 @@ def create_room(sid):
     player_list[sid] = id
     sio.emit('message', 'Room {} created. Joining game as {}'.format(id, name), room=id)
     sio.emit('room_created', {'room_id': str(id), 'player_name': name}, sid)
+    # Send to client the name of the character they are assigned
+    sio.emit('player_character', {'player_character': name})
 
 @sio.on('join_room')
 def join_room(sid): #data = room_id

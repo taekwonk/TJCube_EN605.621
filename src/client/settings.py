@@ -58,45 +58,6 @@ BG_COLOR_INFO_PANE = LIGHT_BLUE
 BOARD_GRID_LINE_COLOR = WHITE
 BTN_BG_COLOR = RED
 
-# HEADERS -----------------------------
-
-# Game Header
-# Font Style Key (object.render('TEXT', True, color))
-GAME_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
-GAME_HEADER = GAME_HEADER_FONT.render('CLUE', True, RED)
-GAME_HEADER_RECT = GAME_HEADER.get_rect()
-GAME_HEADER_RECT.midright = (1125, 50)
-
-# Player Identification Section Header
-PLAYER_ID_HEADER_FONT = pg.font.Font('freesansbold.ttf', 35)
-PLAYER_ID_HEADER = PLAYER_ID_HEADER_FONT.render('PLAYER :', True, RED)
-PLAYER_ID_HEADER_RECT = PLAYER_ID_HEADER.get_rect()
-PLAYER_ID_HEADER_RECT.midleft = (125, 50)
-
-# Your Cards Section Header
-YOUR_CARDS_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
-YOUR_CARDS_HEADER = YOUR_CARDS_HEADER_FONT.render('Your Cards', True, RED)
-YOUR_CARDS_HEADER_RECT = YOUR_CARDS_HEADER.get_rect()
-YOUR_CARDS_HEADER_RECT.midright = (1130, 160)
-
-# Player Turn Section Header
-PLAYER_TURN_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
-PLAYER_TURN_HEADER = PLAYER_TURN_HEADER_FONT.render('TURN :', True, RED)
-PLAYER_TURN_HEADER_RECT = PLAYER_TURN_HEADER.get_rect()
-PLAYER_TURN_HEADER_RECT.midleft = (50, 625)
-
-# Player Position Section Header
-PLAYER_POSITION_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
-PLAYER_POSITION_HEADER = PLAYER_POSITION_HEADER_FONT.render('Location :', True, RED)
-PLAYER_POSITION_HEADER_RECT = PLAYER_POSITION_HEADER.get_rect()
-PLAYER_POSITION_HEADER_RECT.midleft = (50, 690)
-
-# Known Information Section Header
-KNOWN_INFO_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
-KNOWN_INFO_HEADER = KNOWN_INFO_HEADER_FONT.render('Known Information', True, RED)
-KNOWN_INFO_HEADER_RECT = KNOWN_INFO_HEADER.get_rect()
-KNOWN_INFO_HEADER_RECT.midright = (1185, 315)
-
 # GENERAL SETTINGS --------------------
 
 # General Font Style Key
@@ -108,15 +69,25 @@ TEXT_COLOR_SP_FONT = pg.font.Font('freesansbold.ttf', 12)
 FREE_TILE = 'FREE_TILE' # arbitrary but unique value
 BLOCKED_TILE = 'BLOCKED_TILE' # arbitrary but unique value
 TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
-# ANIMATION_SPEED = 20 # integer from 1 to 100, higher is faster animation
+#ANIMATION_SPEED = 20 # integer from 1 to 100, higher is faster animation
 
-# Images
+# Creation Methods
+def makeInfoHeader(text, font_size, color, top, left):
+    # Create the Surface and Rect objects for some text
+    text_font = pg.font.Font('freesansbold.ttf', font_size)
+    textSurf = text_font.render(text, True, color)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
 
-# Sounds
+def displayServerData(data_text, font_size, color, top, left):
+    # Create the Surface and Rect objects for some text
+    text_font = pg.font.Font('freesansbold.ttf', font_size)
+    textSurf = text_font.render(data_text, True, color)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
 
-# BUTTONS ----------------------------
-
-# Shortcut Method for Displaying Buttons ! Needs to be before buttons!
 def makeButtonText(text, color, bgcolor, top, left):
     # Create the Surface and Rect objects for some text
     textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
@@ -130,6 +101,40 @@ def makeSecretPassageButtonWithText(text, color, bgcolor, top, left):
     textRect = textSurf.get_rect()
     textRect.topleft = (top, left)
     return (textSurf, textRect)
+
+# HEADERS -----------------------------
+
+# Game Header
+# Font Style Key (object.render('TEXT', True, color))
+GAME_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
+GAME_HEADER = GAME_HEADER_FONT.render('CLUE', True, RED)
+GAME_HEADER_RECT = GAME_HEADER.get_rect()
+GAME_HEADER_RECT.midright = (1125, 50)
+
+# Player Identification Section Header
+PLAYER_ID_HEADER, PLAYER_ID_HEADER_RECT = makeInfoHeader('PLAYER :', 35, RED, 125, 25)
+# Player Turn Section Header
+PLAYER_TURN_HEADER, PLAYER_TURN_HEADER_RECT = makeInfoHeader('TURN :', 50, RED, 50, 600)
+# Player Position Section Header
+PLAYER_POSITION_HEADER, PLAYER_POSITION_HEADER_RECT = makeInfoHeader('Location :', 50, RED, 50, 675)
+
+# Your Cards Section Header
+YOUR_CARDS_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
+YOUR_CARDS_HEADER = YOUR_CARDS_HEADER_FONT.render('Your Cards', True, RED)
+YOUR_CARDS_HEADER_RECT = YOUR_CARDS_HEADER.get_rect()
+YOUR_CARDS_HEADER_RECT.midright = (1130, 160)
+
+# Known Information Section Header
+KNOWN_INFO_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
+KNOWN_INFO_HEADER = KNOWN_INFO_HEADER_FONT.render('Known Information', True, RED)
+KNOWN_INFO_HEADER_RECT = KNOWN_INFO_HEADER.get_rect()
+KNOWN_INFO_HEADER_RECT.midright = (1185, 315)
+
+# Images
+
+# Sounds
+
+# BUTTONS ----------------------------
 
 # Board Buttons
 # -- Top Menu Options --

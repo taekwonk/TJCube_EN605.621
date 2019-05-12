@@ -12,14 +12,15 @@
 # Reference: https://youtu.be/ajR4BZBKTr4
 #
 #
-# CHECKLIST:
+# TO-DO:
 # Function for pop up dialog selection to test against cards / case
-# Spawn character token sprite with each client ..?
+# Spawn character token sprite with each client ..?!
 # Display player hand
 # Display player character
 # Display who's turn it is
 # Display Player Location
 # Functionality behind passage way buttons
+# Save popDialog selected option in function
 #
 # https://github.com/miguelgrinberg/Flask-SocketIO/issues/822
 #
@@ -265,6 +266,11 @@ class Game:
                 #    self.player = Player(self, col, row, PURPLE, player6)
         logging.warning("Set up board for a new game.")
 
+    # Weird being here and a separate class. Worry about duplication later.
+    # Note there is a dependency with the function call from gameOptions to the
+    # class popDialog. However, while that class ran fine solo, it wouldn't run
+    # properly until I added the function here in clueGame. To revisit if there
+    # is time later.
     def popDialog(suspects, weapons, rooms):
 
         popupDialog = tk.Tk()
@@ -300,6 +306,9 @@ class Game:
         selectBtn.grid(row=4, column=1)
 
         tk.mainloop()
+
+#    def displayServerData():
+
 
     def run(self):
         # game loop - set self.playing = False to end the game
