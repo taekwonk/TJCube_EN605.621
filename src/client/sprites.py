@@ -8,10 +8,11 @@ import pygame as pg
 from settings import *
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y, color, character):
+    def __init__(self, id, game, x, y, color):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
+        self.id = id
         self.image = pg.Surface((TILE_SIZE, TILE_SIZE))
         self.image.fill(color)
         self.rect = self.image.get_rect()
@@ -30,8 +31,15 @@ class Player(pg.sprite.Sprite):
                 return True
         return False
 
-    def getPostition(self, tile):
-        self.tile = tile
+    def initialize(self, cards, location):
+        self.cards = cards
+        self.location = location
+
+    def suggest(self, data):
+        pass
+
+    def accuse(self, data):
+        pass
 
     def update(self):
         self.rect.x = self.x * TILE_SIZE

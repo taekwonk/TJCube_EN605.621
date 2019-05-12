@@ -18,33 +18,10 @@ app = socketio.WSGIApp(sio)
 rooms = {} #key= guid, value= game
 player_list = {} #key=sid, value=room_id
 
-@sio.on('debug')
-def debug(sid):
-    print('rooms', rooms)
-    print('players', player_list)
-    sio.emit('debug', {'sid': sid, 'test': 'test'})
-#    sio.emit('message', rooms)
- #   sio.emit('message', player_list)
-
-#clients = []
-
 @sio.on('connect')
 def connect(sid, environ):
-    #clients.append(sid)
     sio.save_session(sid, {"test" : "test string"})
-    #print('connect', sid)
     sio.emit('message', 'connected to server', sid)
-
-@sio.on('message')
-def message(sid, data):
-    #data.message, data.room_id
-    print('message', data)
-
-    room_id = player_list[sid]
-    if(room_id is not None):
-        room = rooms[room_id]
-
-        sio.emit('message', data.message, data.room_id)
 
 @sio.on('disconnect')
 def disconnect(sid):

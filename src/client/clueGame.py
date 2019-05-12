@@ -3,8 +3,6 @@
 # Spring 2019 - Foundations of Software Engineering
 # TJ^3 Project Group
 #
-# This page was last modified (4.23.2019) by Jenna S. Nuth
-#
 # References:
 # https://youtu.be/ajR4BZBKTr4
 # https://inventwithpython.com/makinggames.pdf
@@ -15,23 +13,24 @@
 #
 #
 # CHECKLIST:
-# on_room_created
-# on_joined_game
-# on_game_started
-# on_moved
-# on_start_turn
+# Function for pop up dialog selection to test against cards / case
+# Spawn character token sprite with each client ..?
+# Display player hand
+# Display player character
+# Display who's turn it is
+# Display Player Location
+# Functionality behind passage way buttons
 #
-# Block tile when token leaves it
-# Multi-client connected to different players
-#
-# http://www.mechanicalcat.net/richard/log/Python/PyGame_sample__drawing_a_map__and_moving_around_it
+# https://github.com/miguelgrinberg/Flask-SocketIO/issues/822
 #
 
 import pygame as pg
 import logging
 import sys
 import socketio
+import tkinter as tk # lowercase for Python-3
 
+from pygame.locals import *
 from os import path
 from settings import *
 from sprites import *
@@ -39,26 +38,138 @@ from settings import *
 from characters import *
 from weapons import *
 from rooms import *
-from buttons import *
 from logic import *
+from gameOptions import *
 
-# Set up the Server-Client Connection
+# Set up the Server-Client Connection ******************************************
+
 sio = socketio.Client()
 sio.connect('http://localhost:5000')
 
-clientNumber = 0
-hand = 0
+hand = None
+
+@sio.on('connect')
+def on_connect():
+    print('Successfully Connected')
+
+@sio.on('disconnect')
+def on_disconnect():
+    print('Successfully Disconnected')
+
+# Triggered when current player on this client joins a game.
+# Data contains room id and player name
+# Only triggered for current player on this client.
+# data.room_id
+# data.player_name
+@sio.on('joined_game')
+def on_joined_game(data):
+    print(data)
+
+# Triggered when the game is started.
+# Data contains player that has the starting turn.
+# data.name - player name
+# data.id - player id
+@sio.on('game_started')
+def on_game_started(data):
+    sio.emit('my_hand')
+    #print(data)
+
+# Triggered when player moves.
+# Data contains information about the player who moved
+# data.name - player name (ex. Mrs. White)
+# data.location - name of the player's new location (ex. 'Hall', h_sh, ...)
+@sio.on('moved')
+def on_moved(data):
+    pass
+    #print(data)
+
+@sio.on('start_turn')
+def on_start_turn(data):
+    print(data)
+
+# Returns data that is the hand of the current player
+# Data is array of cards dictionary({'name':'Knife', 'type':'CardType.WEAPON'})
+@sio.on('my_hand')
+def on_my_hand(data):
+    global hand
+    hand = data
+    print('My Hand:', data)
+
+# Called as part of suggestion process.
+# Player who receives this message must choose one of the cards suggested
+# If player has no matching cards, it should return None
+# If there are multiple cards, the client should let the user choose which one he/she wants to show
+# This client just selects one for you for simplicity sake
+# Data is the case object the other player suggested
+# data.suspect - suspect name
+# data.location - room name
+# data.weapon - weapon name
+@sio.on('suggest_react')
+def on_suggest_react(data):
+    print(hand)
+    print('Your turn to react to suggestion, ')
+
+    card = None
+    for item in hand:
+        if(item['name'] == data['suspect'] or item['name'] == data['location'] or item['name'] == data['weapon']):
+            card = item
+            break
+
+    print('reacting with:', card)
+    sio.emit('suggest_reacted', card)
+
+# Triggered when current player makes suggestion.
+# Data contains information of the card shown by other player
+# This is only triggered if current player on this client makes suggestion and other players do not get this info.
+# data.player_name - name of player who showed card to you
+# data.name - name of the card shown
+# data.type - type of the card shown
+@sio.on('suggest_result') #only received by player who suggested
+def on_suggest_result(data):
+    print('suggest_result', data)
+    print('{} showed {}'.format(data['player_name'], data['name']))
+
+# Triggered when someone makes accuation.
+# Data contains result of accusation whether it was correct or not
+# data.is_correct - true/false whether accuse was correct.
+@sio.on('accuse_result')
+def on_accuse_result(data):
+    pass
+    #print(data)
+
+# What is this...? --------------
+def join(l, sep):
+    out = ''
+    for i, el in enumerate(l):
+        el = "".join(e[0] for e in el.split())
+        out += '{}{}'.format(el,sep)
+
+    return out[:-len(sep)]
+
+# Don't believe needed with GUI --------------
+@sio.on('all_locations')
+def on_print_board(data): #player list info
+    pass
 
 suspects = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Mrs. White", "Colonel Mustard"]
 weapons = ["Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver"]
 rooms = ["Study", "Hall", "Lounge", "Library", "Billiard Room", "Dining Room", "Conservatory", "Ballroom", "Kitchen"]
 
-player1 = suspects[0]
-player2 = suspects[1]
-player3 = suspects[2]
-player4 = suspects[3]
-player5 = suspects[4]
-player6 = suspects[5]
+# Text based move selection
+def join_selection(l, abbreviate):
+    out = ''
+    for i, el in enumerate(l):
+        if(abbreviate):
+            el = "".join(e[0] for e in el.split())
+
+            out += '{}:{}-{}{}'.format(i, el, l[i], ', ')
+        else:
+            out += '{}:{}{}'.format(i, l[i], ', ')
+
+    return out[:-len(', ')]
+
+
+# Game Clue ********************************************************************
 
 class Game:
 
@@ -71,7 +182,12 @@ class Game:
     # Not sure if there is a better one than warning as info doesn't print log
     log.warning('Winter is Here')
 
+    def quit_callback():
+        global Done
+        Done = True
+
     def __init__(self):
+        # initialize pygame
         pg.init()
         self.players = []
         self.screen = WINDOW_SET
@@ -80,7 +196,8 @@ class Game:
         pg.key.set_repeat() # 1 move per key press
         self.load_data()
         logging.warning("Setting up basic configurations.")
-        self.all_sprites = pg.sprite.Group()
+        # initialize tkinter
+        #popDialog = tk.Tk()
 
     def load_data(self):
         game_folder = path.dirname(__file__)
@@ -92,6 +209,7 @@ class Game:
 
     def new_board(self):
         # initialize all variables and do all the setup for a new game
+        self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.rooms = pg.sprite.Group()
         self.halls = pg.sprite.Group()
@@ -128,26 +246,60 @@ class Game:
                 # Need to spawn player with each client
                 # Starting Player Token / Tiles
                 # --- Player1 = Scarlet
-                if tile == 'S':
-                    self.player = Player(self, col, row, RED, player1)
+                #if tile == 'S':
+                #    self.player = Player(self, col, row, RED, player1)
                 # --- Player2 = Mustard
-                if tile == 'M':
-                    self.player = Player(self, col, row, YELLOW, player2)
+                #if tile == 'M':
+                #    self.player = Player(self, col, row, YELLOW, player2)
                 # --- Player3 = White
-                if tile == 'W':
-                    self.player = Player(self, col, row, WHITE, player3)
+                #if tile == 'W':
+                #    self.player = Player(self, col, row, WHITE, player3)
                 # --- Player4 = Green
-                if tile == 'G':
-                    self.player = Player(self, col, row, GREEN, player4)
+                #if tile == 'G':
+                #    self.player = Player(self, col, row, GREEN, player4)
                 # --- Player5 = Peacock
-                if tile == 'B':
-                    self.player = Player(self, col, row, BLUE, player5)
+                #if tile == 'B':
+                #    self.player = Player(self, col, row, BLUE, player5)
                 # --- Player6 = Plum
-                if tile == 'P':
-                    self.player = Player(self, col, row, PURPLE, player6)
-
+                #if tile == 'P':
+                #    self.player = Player(self, col, row, PURPLE, player6)
         logging.warning("Set up board for a new game.")
 
+    def popDialog(suspects, weapons, rooms):
+
+        popupDialog = tk.Tk()
+        popupDialog.geometry("300x200")
+        popupDialog.title("What's Your Thoughts?")
+
+        tk.Label(popupDialog, text="Murder Mystery:").grid(row=0)
+
+        varSuspect = tk.StringVar()
+        varWeapon = tk.StringVar()
+        varRoom = tk.StringVar()
+
+        tk.Label(popupDialog, text="Suspects: ").grid(row=1, column=0)
+        # Suspect Options
+        selectSuspect = tk.OptionMenu(popupDialog, varSuspect, *suspects)
+        selectSuspect.configure(font=("Arial", 15))
+        selectSuspect.grid(row=1, column=1)
+
+        tk.Label(popupDialog, text="Weapons: ").grid(row=2, column=0)
+        # Weapon Options
+        selectWeapon = tk.OptionMenu(popupDialog, varWeapon, *weapons)
+        selectWeapon.configure(font=("Arial", 15))
+        selectWeapon.grid(row=2, column=1)
+
+        tk.Label(popupDialog, text="Rooms: ").grid(row=3, column=0)
+        # Room Options
+        selectRoom = tk.OptionMenu(popupDialog, varRoom, *rooms)
+        selectRoom.configure(font=("Arial", 15))
+        selectRoom.grid(row=3, column=1)
+
+        # Select Button
+        selectBtn = tk.Button(popupDialog, text="Select") #, command=makeSelection)
+        selectBtn.grid(row=4, column=1)
+
+        tk.mainloop()
 
     def run(self):
         # game loop - set self.playing = False to end the game
@@ -187,27 +339,28 @@ class Game:
         self.screen.blit(TO_STUDY_BTN, TO_STUDY_BTN_RECT)
         self.screen.blit(TO_CONSERVATORY_BTN, TO_CONSERVATORY_BTN_RECT)
         self.screen.blit(TO_LOUNGE_BTN, TO_LOUNGE_BTN_RECT)
+        # Probably going to make one long box take in string array to display
         # Cards Display Boxes (Y at 200)
         pg.draw.rect(WINDOW_SET, RED, (725,200, 675, 75))
-        pg.draw.line(WINDOW_SET, BLACK, (800,200), (800,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (875,200), (875,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (950,200), (950,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1025,200), (1025,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1100,200), (1100,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1175,200), (1175,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1250,200), (1250,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1325,200), (1325,275), 5)
-        pg.draw.line(WINDOW_SET, BLACK, (1400,200), (1400,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (800,200), (800,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (875,200), (875,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (950,200), (950,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1025,200), (1025,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1100,200), (1100,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1175,200), (1175,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1250,200), (1250,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1325,200), (1325,275), 5)
+        #pg.draw.line(WINDOW_SET, BLACK, (1400,200), (1400,275), 5)
         # Cards Display Titles
-        self.screen.blit(CARD_1, CARD_1_RECT)
-        self.screen.blit(CARD_2, CARD_2_RECT)
-        self.screen.blit(CARD_3, CARD_3_RECT)
-        self.screen.blit(CARD_4, CARD_4_RECT)
-        self.screen.blit(CARD_5, CARD_5_RECT)
-        self.screen.blit(CARD_6, CARD_6_RECT)
-        self.screen.blit(CARD_7, CARD_7_RECT)
-        self.screen.blit(CARD_8, CARD_8_RECT)
-        self.screen.blit(CARD_9, CARD_9_RECT)
+        #self.screen.blit(CARD_1, CARD_1_RECT)
+        #self.screen.blit(CARD_2, CARD_2_RECT)
+        #self.screen.blit(CARD_3, CARD_3_RECT)
+        #self.screen.blit(CARD_4, CARD_4_RECT)
+        #self.screen.blit(CARD_5, CARD_5_RECT)
+        #self.screen.blit(CARD_6, CARD_6_RECT)
+        #self.screen.blit(CARD_7, CARD_7_RECT)
+        #self.screen.blit(CARD_8, CARD_8_RECT)
+        #self.screen.blit(CARD_9, CARD_9_RECT)
         # So&So's Turn
         # Known Information Section Boxes (Y at 350)
         pg.draw.rect(WINDOW_SET, RED, (725, 350, 675, 275))
@@ -241,13 +394,14 @@ class Game:
         self.screen.blit(CHECK_ROOM_LIBRARY, CHECK_ROOM_LIBRARY_RECT)
         self.screen.blit(CHECK_ROOM_LOUNGE, CHECK_ROOM_LOUNGE_RECT)
         self.screen.blit(CHECK_ROOM_STUDY, CHECK_ROOM_STUDY_RECT)
-        # Checks
         # Add Bottom Buttons
         self.screen.blit(END_TURN_BTN, END_TURN_RECT)
         self.screen.blit(MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT)
         self.screen.blit(MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT)
         self.all_sprites.draw(self.screen)
         pg.display.flip()
+
+
 
     def events(self):
         # All events caught here
@@ -280,50 +434,42 @@ class Game:
                 mouseclick = pg.mouse.get_pressed()
                 # Check if the user clicked on an option button
                 if CREATE_GAME_RECT.collidepoint(pos) and mouseclick:
-                    sio.emit('create_game')
                     logging.warning('Clicked on Create Game Button')
+                    sio.emit('create_room')
                 elif JOIN_GAME_RECT.collidepoint(pos) and mouseclick:
-                    sio.emit('join_room')
                     logging.warning('Clicked on Join Game Button')
+                    sio.emit('join_room')
                 elif START_GAME_RECT.collidepoint(pos) and mouseclick:
-                    sio.emit('start_game')
                     logging.warning('Clicked on Start Game Button')
+                    sio.emit('start_game')
                 elif QUIT_GAME_RECT.collidepoint(pos) and mouseclick:
+                    logging.warning('Clicked on Quit Game Button')
                     sio.disconnect()
                     logging.warning('Disconnected from the Server')
-                    logging.warning('Clicking on Quit Game Button')
                     self.quit()
                     sys.exit()
                 elif END_TURN_RECT.collidepoint(pos) and mouseclick:
-                    sio.emit('end_turn')
                     logging.warning('Clicked on Finished With Turn / End Turn Button')
+                    sio.emit('end_turn')
                 elif MAKE_SUGGESTION_RECT.collidepoint(pos) and mouseclick:
-                    makeSuggestion()
                     logging.warning('Clicked on Make A Suggestion Button')
+                    makeSuggestion(suspects, weapons, rooms)
                 elif MAKE_ACCUSATION_RECT.collidepoint(pos) and mouseclick:
-                    makeAccusation()
                     logging.warning('Clicked on Make An Accusation Button')
+                    makeAccusation(suspects, weapons, rooms)
                 # Buttons for Secret Passage Ways
                 elif TO_KITCHEN_BTN_RECT.collidepoint(pos) and mouseclick:
-                    passageToKitchen()
                     logging.warning('Taking the passage way to the Kitchen')
+                    passageToKitchen()
                 elif TO_STUDY_BTN_RECT.collidepoint(pos) and mouseclick:
-                    passageToStudy()
                     logging.warning('Taking the passage way to the Study')
+                    passageToStudy()
                 elif TO_CONSERVATORY_BTN_RECT.collidepoint(pos) and mouseclick:
-                    passageToConservatory()
                     logging.warning('Taking the passage way to the Conservatory')
+                    passageToConservatory()
                 elif TO_LOUNGE_BTN_RECT.collidepoint(pos) and mouseclick:
-                    passageToLounge()
                     logging.warning('Taking the passage way to the Lounge')
-
-                # Checkboxes - currently being overwritten so need to save state...
-                elif CHECKBOX_GREEN_RECT.collidepoint(pos) and mouseclick:
-                    GREEN_BOX=(CHECKBOX_GREEN_CHECKED, CHECKBOX_GREEN_CHECKED_RECT)
-                    logging.warning('Checked GREEN')
-                elif CHECKBOX_GREEN_CHECKED_RECT.collidepoint(pos) and mouseclick:
-                    self.screen.blit(CHECKBOX_GREEN, CHECKBOX_GREEN_RECT)
-                    logging.warning('Unchecked GREEN')
+                    passageToLounge()
 
     def show_start_screen(self):
         pass
