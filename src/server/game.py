@@ -221,6 +221,10 @@ class Game:
 
         return d
 
+    def list_players(self):
+        players = [p.name for p in self.players]
+        return players
+
     #other game logic
 
     

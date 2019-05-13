@@ -262,5 +262,14 @@ def get_all_location(sid):
     players = game.get_player_locations()
     sio.emit('all_locations', players, sid)
 
+@sio.on('list_players')
+def list_players(sid):
+    room_id = player_list[sid]
+    game = rooms[room_id]
+
+    players = game.list_players()
+    sio.emit('list_players', players, sid)
+
+
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen((host,port)), app)
