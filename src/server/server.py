@@ -67,7 +67,7 @@ def join_room(sid): #data = room_id
                     player_list[sid] = key
 
                     sio.emit('message', 'Player joined as {}'.format(name), key)
-                    sio.emit('joined_game', {'room_id':str(key), 'player_name':name}, sid)
+                    sio.emit('joined_game', {'room_id':str(key), 'player_name':name}, key)
                 else:
                     sio.emit('message', None, room=key)
 
