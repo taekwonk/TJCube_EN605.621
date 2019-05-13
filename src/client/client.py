@@ -4,6 +4,8 @@ import socketio
 
 sio = socketio.Client()
 
+hand = None
+
 @sio.on('connect')
 def on_connect():
     print('connected')
@@ -41,7 +43,7 @@ def on_joined_game(data):
 # data.id - player id
 @sio.on('game_started')
 def on_game_started(data): 
-    pass
+    sio.emit('my_hand')
     #print(data)
 
 # Triggered when player moves. Data contains information about the player who moved
@@ -56,6 +58,36 @@ def on_moved(data):
 def on_start_turn(data):
     print(data)
 
+#returns data that is the hand of the current player
+#data is array of cards dictionary({'name':'Knife', 'type':'CardType.WEAPON'})
+@sio.on('my_hand')
+def on_my_hand(data):
+    global hand 
+    hand = data
+    print('My Hand:', data)
+
+#called as part of suggestion process. Player who receives this message must choose one of the cards suggested
+#if player has no matching cards, it should return None
+#if there are multiple cards, the client should let the user choose which one he/she wants to show
+#this text client just selects one for you for simplicity sake
+#data is the case object the other player suggested
+#data.suspect - suspect name
+#data.location - room name
+#data.weapon - weapon name
+@sio.on('suggest_react')
+def on_suggest_react(data):
+    print(hand)
+    print('Your turn to react to suggestion, ')
+
+    card = None
+    for item in hand:
+        if(item['name'] == data['suspect'] or item['name'] == data['location'] or item['name'] == data['weapon']):
+            card = item
+            break
+
+    print('reacting with:', card)
+    sio.emit('suggest_reacted', card)
+
 # Triggered when current player makes suggestion. Data contains information of the card shown by other player
 # This is only triggered if current player on this client makes suggestion and other players do not get this info.
 # data.player_name - name of player who showed card to you
@@ -63,6 +95,7 @@ def on_start_turn(data):
 # data.type - type of the card shown
 @sio.on('suggest_result') #only received by player who suggested
 def on_suggest_result(data): 
+    print('suggest_result', data)
     print('{} showed {}'.format(data['player_name'], data['name']))
 
 # Triggered when someone makes accuation. Data contains result of accusation whether it was correct or not
@@ -112,7 +145,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Lounge' in data):
-        print('{0: ^8}'.format(join(ata['Lounge'],',')), end="")
+        print('{0: ^8}'.format(join(data['Lounge'],',')), end="")
     else:
         print('        ', end="")
     print('|')    
@@ -176,7 +209,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Dining Room' in data):
-        print('{0: ^8}'.format(join(ata['Dining Room'],',')), end="")
+        print('{0: ^8}'.format(join(data['Dining Room'],',')), end="")
     else:
         print('        ', end="")
     print('|')    
@@ -240,7 +273,7 @@ def on_print_board(data): #player list info
         print('----', end="")
     print('|', end="")    
     if('Kitchen' in data):
-        print('{0: ^8}'.format(join(ata['Kitchen'],',')), end="")
+        print('{0: ^8}'.format(join(data['Kitchen'],',')), end="")
     else:
         print('        ', end="")
     print('|')    
@@ -272,7 +305,7 @@ def join_selection(l, abbreviate):
     return out[:-len(', ')]
 
 while 1:
-    selection = input('Type selection (0:join, 1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end, 10: print board): ')
+    selection = input('Type selection (0:join, 1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end, 10: print board, 11: my hand): ')
     print(selection)
     if selection == "1":
         msg = input('Enter message:')
@@ -318,7 +351,10 @@ while 1:
         sio.emit('end_turn')
     elif selection == "10":
         sio.emit('get_all_location')
+    elif selection =="11":
+        sio.emit('my_hand')
     
 
 
 print('program ended')
+

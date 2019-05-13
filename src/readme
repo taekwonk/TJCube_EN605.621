@@ -2,3 +2,4 @@ install following packages
 requests
 python-socketio
 eventlet
+pygame
