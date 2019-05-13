@@ -20,7 +20,7 @@ class Game:
         self.case_file = {}
 
         self.suspects = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Mrs. White", "Colonel Mustard"]
-        self.suspect_initial_locations = ["h_hl", "h_sl", "h_lc", "h_cb", "h_bk", "h_ld"]
+        self.suspect_initial_locations = ["S", "P", "B", "G", "W", "M"]
         self.card_list = []
 
         self.isSuggestPhase = False
@@ -82,7 +82,7 @@ class Game:
             i = self.suspects.index(p.name)
             p.location = self.board.get_tile(self.suspect_initial_locations[i])
 
-    
+
     def add_player(self, sid):
         if(len(self.players) < 6):
             player = Player(sid, self.suspects[len(self.players)])
@@ -100,7 +100,7 @@ class Game:
         self.initialize_game()
         #TODO: give player turn
         return {"name": self.suspects[0], "id": self.players[0].id}
-    
+
     def next_turn(self):
         self.current_player_index = self.current_player_index + 1
         if(self.current_player_index >= len(self.players)):
@@ -118,7 +118,7 @@ class Game:
     def player_moved(self, player_id, tileName):
         #validate move
         #update player location
-        #return 
+        #return
         player = self.get_player(player_id)
         current_location = player.location
         valid_tiles = current_location.get_connected()
@@ -132,7 +132,7 @@ class Game:
         player.moved = True
         player.location = to_tile
         return True
-    
+
     def suggestion_made(self, player_id, case):
         player = self.get_player(player_id)
         #TODO: add validation (is player in correct room?, is it player's turn?)
@@ -159,7 +159,7 @@ class Game:
         #     card = next((x for x in p.cards if x.name == case['suspect'] or x.name == case['weapon'] or x.name == case['location']), None)
         #     if(card is not None):
         #         return {"card": card, "player_name": p.name}
-        
+
         # return {"card": None}
 
     def suggestion_reacted(self, player_id, card):
@@ -176,11 +176,11 @@ class Game:
 
     def is_player_suggest_react_turn(self, player_id):
         return self.players[self.suggestPlayerTurn].id == player_id
-    
+
 
     def accusation_made(self, player_id, case):
         player = self.get_player(player_id)
-        weapon = self.case_file['weapon'].name 
+        weapon = self.case_file['weapon'].name
         room = self.case_file['room'].name
         suspect = self.case_file['suspect'].name
 
@@ -226,8 +226,3 @@ class Game:
         return players
 
     #other game logic
-
-    
-
-
-    

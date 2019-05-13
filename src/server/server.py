@@ -18,30 +18,10 @@ app = socketio.WSGIApp(sio)
 rooms = {} #key= guid, value= game
 player_list = {} #key=sid, value=room_id
 
-@sio.on('debug')
-def debug(sid):
-    print('rooms', rooms)
-    print('players', player_list)
-    sio.emit('debug', {'sid': sid, 'test': 'test'})
-#    sio.emit('message', rooms)
- #   sio.emit('message', player_list)
-
 @sio.on('connect')
 def connect(sid, environ):
     sio.save_session(sid, {"test" : "test string"})
-    print('connect', sid)
     sio.emit('message', 'connected to server', sid)
-
-@sio.on('message')
-def message(sid, data):
-    #data.message, data.room_id
-    print('message', data)
-
-    room_id = player_list[sid]
-    if(room_id is not None):
-        room = rooms[room_id]
-
-        sio.emit('message', data.message, data.room_id)
 
 @sio.on('disconnect')
 def disconnect(sid):
@@ -58,13 +38,15 @@ def create_room(sid):
     session['room'] = id
 
     sio.enter_room(sid, id)
-    name = rooms[id].add_player(sid)   
+    name = rooms[id].add_player(sid)
     session['name'] = name
     sio.save_session(sid, session)
 
-    player_list[sid] = id 
+    player_list[sid] = id
     sio.emit('message', 'Room {} created. Joining game as {}'.format(id, name), room=id)
-    sio.emit('room_created', {'room_id': str(id), 'player_name': name}, sid)    
+    sio.emit('room_created', {'room_id': str(id), 'player_name': name}, sid)
+    # Send to client the name of the character they are assigned
+    sio.emit('player_character', {'player_character': name})
 
 @sio.on('join_room')
 def join_room(sid): #data = room_id
@@ -81,7 +63,7 @@ def join_room(sid): #data = room_id
                     session['room'] = key
                     session['name'] = name
                     sio.save_session(sid, session)
-                            
+
                     player_list[sid] = key
 
                     sio.emit('message', 'Player joined as {}'.format(name), key)
@@ -91,9 +73,9 @@ def join_room(sid): #data = room_id
 
     else : #rejoining from connection drop, for example. Maybe don't need this?
         #TODO: finish this
-        sio.enter_room(sid, key) 
+        sio.enter_room(sid, key)
         sio.emit('message', 'Rejoined room', room=session['room'])
-                
+
     # else:
     #     sio.enter_room(sid, data)
     #     session = sio.session as session
@@ -101,7 +83,7 @@ def join_room(sid): #data = room_id
     #     sio.save_session(sid, session)
 
     #     sio.emit(data)
-    
+
 
 @sio.on('start_game')
 def start_game(sid):
@@ -115,7 +97,7 @@ def start_game(sid):
         sio.emit('game_started', start_player_info, room_id)
 
 @sio.on('move')
-def move(sid, tileName): #tileName: ex. Library, h_sh, etc.        
+def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
     room_id = player_list[sid]
     game = rooms[room_id]
 
@@ -127,15 +109,15 @@ def move(sid, tileName): #tileName: ex. Library, h_sh, etc.
                 return
 
             valid = game.player_moved(sid, tileName)
-            if(valid):                        
+            if(valid):
                 player.moved = True
-                
+
                 sio.emit('message', '{} moved to {}'.format(player.name, player.location.name), room_id)
                 sio.emit('moved', {'name': player.name, 'location': player.location.name}, room_id)
             else:
                 sio.emit('message', 'Hall is already occupied or you have made an invalid move', sid)
 
-        
+
 
 @sio.on('suggest')
 def suggest(sid, case):
@@ -192,13 +174,13 @@ def suggest_reacted(sid, card):
                 sio.emit('message', 'No one had matching card', room_id)
             else:
                 sio.emit('message', 'Player {} showed 1 card'.format(result['player_name']) ,room_id)
-            
+
             print('suggest_result', game.players[game.suggestInitiatedPlayerIndex].id)
             sio.emit('suggest_result', {'player_name': result['player_name'], 'name': result['card']['name'], 'type': str(result['card']['type'])},
                     game.players[game.suggestInitiatedPlayerIndex].id )
         else:
             next_player = game.get_player(result)
-            sio.emit('message', 'It is {}''s turn to react to the suggestion.'.format(next_player.name))            
+            sio.emit('message', 'It is {}''s turn to react to the suggestion.'.format(next_player.name))
             sio.emit('suggest_react', case, result) #in this case result is p_id
     else:
         sio.emit('message', 'It is not your turn to react to suggestion.', sid)
@@ -224,7 +206,7 @@ def accuse(sid, case):
 
 
         sio.emit('accuse_result', {"is_correct": result}, room_id)
-        
+
         #TODO: end game
 
 
