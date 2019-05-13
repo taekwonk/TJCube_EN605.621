@@ -115,6 +115,10 @@ def join(l, sep):
 
     return out[:-len(sep)]
 
+@sio.on('list_players')
+def list_players(data):
+    print(data)
+
 @sio.on('all_locations')
 def on_print_board(data): #player list info
     size = 10
@@ -307,7 +311,7 @@ def join_selection(l, abbreviate):
     return out[:-len(', ')]
 
 while 1:
-    selection = input('Type selection (0:join, 1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end, 10: print board, 11: my hand): ')
+    selection = input('Type selection (0:join, 1: send message, 2: create game, 3: disconnect, 4: debug, 5: start, 6: move, 7: suggest, 8:accuse, 9: end, 10: print board, 11: my hand, 12: list): ')
     print(selection)
     if selection == "1":
         msg = input('Enter message:')
@@ -355,6 +359,9 @@ while 1:
         sio.emit('get_all_location')
     elif selection =="11":
         sio.emit('my_hand')
+    elif selection == "12":
+        sio.emit('list_players')
+    
 
 
 
