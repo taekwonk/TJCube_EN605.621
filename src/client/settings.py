@@ -3,13 +3,7 @@
 # Spring 2019 - Foundations of Software Engineering
 # TJ^3 Project Group
 #
-# This page was last modified (4.23.2019) by Jenna S. Nuth
 # Coding with Atom (=
-#
-# References:
-# https://youtu.be/ajR4BZBKTr4
-# https://inventwithpython.com/makinggames.pdf
-# https://www.raywenderlich.com/2614-multiplayer-game-programming-for-teens-with-python-part-1
 #
 # SETTINGS
 
@@ -64,6 +58,50 @@ BG_COLOR_INFO_PANE = LIGHT_BLUE
 BOARD_GRID_LINE_COLOR = WHITE
 BTN_BG_COLOR = RED
 
+# GENERAL SETTINGS --------------------
+
+# General Font Style Key
+TEXT_HEADER_FONT = pg.font.Font('freesansbold.ttf', 32)
+TEXT_COLOR_PARAGRAPH_FONT = pg.font.Font('freesansbold.ttf', 18)
+TEXT_COLOR_SP_FONT = pg.font.Font('freesansbold.ttf', 12)
+
+# Tile Status
+FREE_TILE = 'FREE_TILE' # arbitrary but unique value
+BLOCKED_TILE = 'BLOCKED_TILE' # arbitrary but unique value
+TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
+#ANIMATION_SPEED = 20 # integer from 1 to 100, higher is faster animation
+
+# Creation Methods
+def makeInfoHeader(text, font_size, color, top, left):
+    # Create the Surface and Rect objects for some text
+    text_font = pg.font.Font('freesansbold.ttf', font_size)
+    textSurf = text_font.render(text, True, color)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
+def displayServerData(data_text, font_size, color, top, left):
+    # Create the Surface and Rect objects for some text
+    text_font = pg.font.Font('freesansbold.ttf', font_size)
+    textSurf = text_font.render(data_text, True, color)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
+def makeButtonText(text, color, bgcolor, top, left):
+    # Create the Surface and Rect objects for some text
+    textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
+def makeSecretPassageButtonWithText(text, color, bgcolor, top, left):
+    # Create the Surface and Rect objects for some text
+    textSurf = TEXT_COLOR_SP_FONT.render(text, True, color, bgcolor)
+    textRect = textSurf.get_rect()
+    textRect.topleft = (top, left)
+    return (textSurf, textRect)
+
 # HEADERS -----------------------------
 
 # Game Header
@@ -74,10 +112,11 @@ GAME_HEADER_RECT = GAME_HEADER.get_rect()
 GAME_HEADER_RECT.midright = (1125, 50)
 
 # Player Identification Section Header
-PLAYER_ID_HEADER_FONT = pg.font.Font('freesansbold.ttf', 35)
-PLAYER_ID_HEADER = PLAYER_ID_HEADER_FONT.render('PLAYER :', True, RED)
-PLAYER_ID_HEADER_RECT = PLAYER_ID_HEADER.get_rect()
-PLAYER_ID_HEADER_RECT.midleft = (125, 50)
+PLAYER_ID_HEADER, PLAYER_ID_HEADER_RECT = makeInfoHeader('PLAYER :', 35, RED, 125, 25)
+# Player Turn Section Header
+PLAYER_TURN_HEADER, PLAYER_TURN_HEADER_RECT = makeInfoHeader('TURN :', 50, RED, 50, 600)
+# Player Position Section Header
+PLAYER_POSITION_HEADER, PLAYER_POSITION_HEADER_RECT = makeInfoHeader('Location :', 50, RED, 50, 675)
 
 # Your Cards Section Header
 YOUR_CARDS_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
@@ -85,29 +124,11 @@ YOUR_CARDS_HEADER = YOUR_CARDS_HEADER_FONT.render('Your Cards', True, RED)
 YOUR_CARDS_HEADER_RECT = YOUR_CARDS_HEADER.get_rect()
 YOUR_CARDS_HEADER_RECT.midright = (1130, 160)
 
-# Player Turn Section Header
-PLAYER_TURN_HEADER_FONT = pg.font.Font('freesansbold.ttf', 50)
-PLAYER_TURN_HEADER = PLAYER_TURN_HEADER_FONT.render('TURN :', True, RED)
-PLAYER_TURN_HEADER_RECT = PLAYER_TURN_HEADER.get_rect()
-PLAYER_TURN_HEADER_RECT.midleft = (100, 625)
-
 # Known Information Section Header
 KNOWN_INFO_HEADER_FONT = pg.font.Font('freesansbold.ttf', 25)
 KNOWN_INFO_HEADER = KNOWN_INFO_HEADER_FONT.render('Known Information', True, RED)
 KNOWN_INFO_HEADER_RECT = KNOWN_INFO_HEADER.get_rect()
 KNOWN_INFO_HEADER_RECT.midright = (1185, 315)
-
-# GENERAL SETTINGS --------------------
-
-# General Font Style Key
-TEXT_HEADER_FONT = pg.font.Font('freesansbold.ttf', 32)
-TEXT_COLOR_PARAGRAPH_FONT = pg.font.Font('freesansbold.ttf', 18)
-
-# Tile Status
-FREE_TILE = 'FREE_TILE' # arbitrary but unique value
-BLOCKED_TILE = 'BLOCKED_TILE' # arbitrary but unique value
-TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
-# ANIMATION_SPEED = 20 # integer from 1 to 100, higher is faster animation
 
 # Images
 
@@ -115,24 +136,22 @@ TAKEN_TILE = 'TAKEN_TILE' # arbitrary but unique value
 
 # BUTTONS ----------------------------
 
-# Shortcut Method for Displaying Buttons ! Needs to be before buttons!
-def makeButtonText(text, color, bgcolor, top, left):
-    # Create the Surface and Rect objects for some text
-    textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
-    textRect = textSurf.get_rect()
-    textRect.topleft = (top, left)
-    return (textSurf, textRect)
-
 # Board Buttons
-# -- Top Menu Options
+# -- Top Menu Options --
 CREATE_GAME_BTN, CREATE_GAME_RECT = makeButtonText('Create Game', WHITE, RED, 775, 100)
 JOIN_GAME_BTN, JOIN_GAME_RECT = makeButtonText('Join Game', WHITE, RED, 950, 100)
 START_GAME_BTN, START_GAME_RECT = makeButtonText('Start Game', WHITE, RED, 1100, 100)
 QUIT_GAME_BTN, QUIT_GAME_RECT = makeButtonText('Quit Game', WHITE, RED, 1250, 100)
-# -- Player Action Items
+# -- Player Action Items --
 END_TURN_BTN, END_TURN_RECT = makeButtonText('Finish With Turn', WHITE, RED, 750, 650)
 MAKE_SUGGESTION_BTN, MAKE_SUGGESTION_RECT = makeButtonText('Make A Suggestion', WHITE, RED, 950, 650)
 MAKE_ACCUSATION_BTN, MAKE_ACCUSATION_RECT = makeButtonText('Make An Accusation', WHITE, RED, 1175, 650)
+# -- Swap Room Buttons --
+TO_KITCHEN_BTN, TO_KITCHEN_BTN_RECT = makeSecretPassageButtonWithText('To Kitchen', WHITE, RED, 20, 200)
+TO_STUDY_BTN, TO_STUDY_BTN_RECT = makeSecretPassageButtonWithText('To Study', WHITE, RED, 20, 225)
+TO_CONSERVATORY_BTN, TO_CONSERVATORY_BTN_RECT = makeSecretPassageButtonWithText('To Conservatory', WHITE, RED, 20, 450)
+TO_LOUNGE_BTN, TO_LOUNGE_BTN_RECT = makeSecretPassageButtonWithText('To Lounge', WHITE, RED, 20, 475)
+
 
 # INFORMATION DISPLAYS ------------------------------
 
@@ -179,20 +198,118 @@ CARD_9_RECT.midright = (1385, 215)
 
 # Player Turn Section
 
-# Known Information Section
+# Known Information Section ----------------------------------------------------
 KNOWN_INFO_SECTION_FONT = pg.font.Font('freesansbold.ttf', 15)
+CHECK_FONT = pg.font.Font('freesansbold.ttf', 12)
+
+def buttonClickColorChange(text, color, bgcolor, top, left):
+    # Create the Surface and Rect objects for some text
+    textSurf = TEXT_COLOR_PARAGRAPH_FONT.render(text, True, color, bgcolor)
+    textRect = textSurf.get_rect()
+    textRect.midleft = (top, left)
+    return (textSurf, textRect)
+
 # Characters
 CHARACTERS_SECTION = KNOWN_INFO_SECTION_FONT.render('CHARACTERS', True, WHITE)
 CHARACTERS_SECTION_RECT = CHARACTERS_SECTION.get_rect()
 CHARACTERS_SECTION_RECT.midright = (885, 375)
+
+# Reverend Green Name and Box
+CHECK_CHAR_GREEN = CHECK_FONT.render('Reverend Green', True, WHITE)
+CHECK_CHAR_GREEN_RECT = CHECK_CHAR_GREEN.get_rect()
+CHECK_CHAR_GREEN_RECT.midleft = (800, 400)
+# Colonel Mustard Name and Box
+CHECK_CHAR_MUSTARD = CHECK_FONT.render('Colonel Mustard', True, WHITE)
+CHECK_CHAR_MUSTARD_RECT = CHECK_CHAR_MUSTARD.get_rect()
+CHECK_CHAR_MUSTARD_RECT.midleft = (800, 425)
+# Mrs. Peacock Name and Box
+CHECK_CHAR_PEACOCK = CHECK_FONT.render('Mrs. Peacock', True, WHITE)
+CHECK_CHAR_PEACOCK_RECT = CHECK_CHAR_PEACOCK.get_rect()
+CHECK_CHAR_PEACOCK_RECT.midleft = (800, 450)
+# Professor Plum Name and Box
+CHECK_CHAR_PLUM = CHECK_FONT.render('Professor Plum', True, WHITE)
+CHECK_CHAR_PLUM_RECT = CHECK_CHAR_PLUM.get_rect()
+CHECK_CHAR_PLUM_RECT.midleft = (800, 475)
+# Miss Scarlet Name and Box
+CHECK_CHAR_SCARLET = CHECK_FONT.render('Mrs. Scarlet', True, WHITE)
+CHECK_CHAR_SCARLET_RECT = CHECK_CHAR_SCARLET.get_rect()
+CHECK_CHAR_SCARLET_RECT.midleft = (800, 500)
+# Mrs. White Name and Box
+CHECK_CHAR_WHITE = CHECK_FONT.render('Mr. White', True, WHITE)
+CHECK_CHAR_WHITE_RECT = CHECK_CHAR_WHITE.get_rect()
+CHECK_CHAR_WHITE_RECT.midleft = (800, 525)
+
 # Weapons
 WEAPONS_SECTION = KNOWN_INFO_SECTION_FONT.render('WEAPONS', True, WHITE)
 WEAPONS_SECTION_RECT = WEAPONS_SECTION.get_rect()
 WEAPONS_SECTION_RECT.midright = (1100, 375)
+
+# Candlestick
+CHECK_WEAPON_CANDLESTICK = CHECK_FONT.render('Candlestick', True, WHITE)
+CHECK_WEAPON_CANDLESTICK_RECT = CHECK_WEAPON_CANDLESTICK.get_rect()
+CHECK_WEAPON_CANDLESTICK_RECT.midleft = (1030, 400)
+# Knife
+CHECK_WEAPON_KNIFE = CHECK_FONT.render('Knife', True, WHITE)
+CHECK_WEAPON_KNIFE_RECT = CHECK_WEAPON_KNIFE.get_rect()
+CHECK_WEAPON_KNIFE_RECT.midleft = (1030, 425)
+# Lead Pipe
+CHECK_WEAPON_LEAD_PIPE = CHECK_FONT.render('Lead Pipe', True, WHITE)
+CHECK_WEAPON_LEAD_PIPE_RECT = CHECK_WEAPON_LEAD_PIPE.get_rect()
+CHECK_WEAPON_LEAD_PIPE_RECT.midleft = (1030, 450)
+# Revolver
+CHECK_WEAPON_REVOLVER = CHECK_FONT.render('Revolver', True, WHITE)
+CHECK_WEAPON_REVOLVER_RECT = CHECK_WEAPON_REVOLVER.get_rect()
+CHECK_WEAPON_REVOLVER_RECT.midleft = (1030, 475)
+# Rope
+CHECK_WEAPON_ROPE = CHECK_FONT.render('Rope', True, WHITE)
+CHECK_WEAPON_ROPE_RECT = CHECK_WEAPON_ROPE.get_rect()
+CHECK_WEAPON_ROPE_RECT.midleft = (1030, 500)
+# Wrench
+CHECK_WEAPON_WRENCH = CHECK_FONT.render('Wrench', True, WHITE)
+CHECK_WEAPON_WRENCH_RECT = CHECK_WEAPON_WRENCH.get_rect()
+CHECK_WEAPON_WRENCH_RECT.midleft = (1030, 525)
+
 # Rooms
 ROOMS_SECTION = KNOWN_INFO_SECTION_FONT.render('ROOMS', True, WHITE)
 ROOMS_SECTION_RECT = ROOMS_SECTION.get_rect()
 ROOMS_SECTION_RECT.midright = (1310, 375)
+
+# Ballroom
+CHECK_ROOM_BALLROOM = CHECK_FONT.render('Ballroom', True, WHITE)
+CHECK_ROOM_BALLROOM_RECT = CHECK_ROOM_BALLROOM.get_rect()
+CHECK_ROOM_BALLROOM_RECT.midleft = (1270, 400)
+# Billiard room
+CHECK_ROOM_BILLIARD = CHECK_FONT.render('Billiard', True, WHITE)
+CHECK_ROOM_BILLIARD_RECT = CHECK_ROOM_BILLIARD.get_rect()
+CHECK_ROOM_BILLIARD_RECT.midleft = (1270, 425)
+# Conservatory
+CHECK_ROOM_CONSERVATORY = CHECK_FONT.render('Conservatory', True, WHITE)
+CHECK_ROOM_CONSERVATORY_RECT = CHECK_ROOM_CONSERVATORY.get_rect()
+CHECK_ROOM_CONSERVATORY_RECT.midleft = (1270, 450)
+# Dining room
+CHECK_ROOM_DINING_ROOM = CHECK_FONT.render('Dining Room', True, WHITE)
+CHECK_ROOM_DINING_ROOM_RECT = CHECK_ROOM_DINING_ROOM.get_rect()
+CHECK_ROOM_DINING_ROOM_RECT.midleft = (1270, 475)
+# Hall
+CHECK_ROOM_HALL = CHECK_FONT.render('Hall', True, WHITE)
+CHECK_ROOM_HALL_RECT = CHECK_ROOM_HALL.get_rect()
+CHECK_ROOM_HALL_RECT.midleft = (1270, 500)
+# Kitchen
+CHECK_ROOM_KITCHEN = CHECK_FONT.render('Kitchen', True, WHITE)
+CHECK_ROOM_KITCHEN_RECT = CHECK_ROOM_KITCHEN.get_rect()
+CHECK_ROOM_KITCHEN_RECT.midleft = (1270, 525)
+# Library
+CHECK_ROOM_LIBRARY = CHECK_FONT.render('Library', True, WHITE)
+CHECK_ROOM_LIBRARY_RECT = CHECK_ROOM_LIBRARY.get_rect()
+CHECK_ROOM_LIBRARY_RECT.midleft = (1270, 550)
+# Lounge
+CHECK_ROOM_LOUNGE = CHECK_FONT.render('Lounge', True, WHITE)
+CHECK_ROOM_LOUNGE_RECT = CHECK_ROOM_LOUNGE.get_rect()
+CHECK_ROOM_LOUNGE_RECT.midleft = (1270, 575)
+# Study
+CHECK_ROOM_STUDY = CHECK_FONT.render('Study', True, WHITE)
+CHECK_ROOM_STUDY_RECT = CHECK_ROOM_STUDY.get_rect()
+CHECK_ROOM_STUDY_RECT.midleft = (1270, 600)
 
 # Even do this?
 # MOVE_UP_BTN
