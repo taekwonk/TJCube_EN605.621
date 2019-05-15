@@ -13,8 +13,7 @@
 #
 #
 # TO-DO:
-# Function for pop up dialog selection to test against cards / case
-# Spawn character token sprite with each client ..?!
+# Spawn character token sprite with each client ..?! Connected with each player
 # Display player hand
 # Display player character
 # Display who's turn it is
@@ -23,6 +22,7 @@
 # Save popDialog selected option in function
 # Checkbox / Button change text color of known information (last priority)
 # Room conditional states
+# Deny suggestion if in a hallway
 #
 # https://github.com/miguelgrinberg/Flask-SocketIO/issues/822
 #
@@ -41,7 +41,6 @@ from settings import *
 from characters import *
 from weapons import *
 from rooms import *
-from logic import *
 from gameOptions import *
 
 # Set up the Server-Client Connection ******************************************
@@ -75,6 +74,8 @@ def on_joined_game(data):
 @sio.on('game_started')
 def on_game_started(data):
     sio.emit('my_hand')
+    # Display player name
+    #PLAYER_ID, PLAYER_ID_RECT = settings.displayServerData(data.name, 12, WHITE, 10, 10)
     #print(data)
 
 # Triggered when player moves.
@@ -309,6 +310,18 @@ class Game:
 
         tk.mainloop()
 
+    def displayPlayerName():
+        pass
+
+    def displayPlayerLocation():
+        pass
+
+    def displayPlayerTurn():
+        pass
+
+    def displayPlayerHand():
+        pass
+
     def run(self):
         # game loop - set self.playing = False to end the game
         self.playing = True
@@ -444,6 +457,7 @@ class Game:
                 if CREATE_GAME_RECT.collidepoint(pos) and mouseclick:
                     logging.warning('Clicked on Create Game Button')
                     sio.emit('create_room')
+                    #self.screen.blit(PLAYER_ID, PLAYER_ID_RECT)
                 elif JOIN_GAME_RECT.collidepoint(pos) and mouseclick:
                     logging.warning('Clicked on Join Game Button')
                     sio.emit('join_room')
